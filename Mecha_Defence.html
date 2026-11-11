@@ -13,7 +13,7 @@
         그 은하의 스테이지 수가 바뀝니다 (지도·정비창 카드·다음 은하 스테이지 번호·최종 스테이지가 자동으로 맞춰짐).
         name          : 상단바 스테이지 이름
         bossAttacks   : 보스 공격 타입 목록 ['blast' 범위 폭탄 직사] + 'missile' 유도탄 (추가 가능)
-        bombCount     : 폭탄 센티넬(중간보스급 폭탄) 등장 수 (0 = 안 나옴)
+        bombCount     : 스테이지 전체 폭탄 센티넬(중간보스급 폭탄) 수 (모든 웨이브에 최소 1대는 항상 등장, 남는 수는 스테이지 진행에 나눠 등장)
         bossImage     : 보스 이미지 ('en_bossA' | 'en_bossB' | 'en_bossC' 파랑 EX-07 | 'en_bossD' 빨강 EX-07 | 'en_bossE' 파랑 SNT-89 | 'en_bossF' 빨강 SNT-89 | 'en_bossG' 파랑 MNT-09 | 'en_bossH' 주황 MNT-09) / bossHue : 보스 색 회전 각도 (0 = 원래 색) / bossCount : 초급 기준 최종 보스 수 (난이도마다 bossPerDifficulty 대 추가)
         waves         : wave 수 / waveLength : wave 1개 적 출현 시간(초) / waveGap : wave 사이 쉬는 시간(초)
         bossDelay     : 마지막 wave 시작 후 보스 등장까지(초)
@@ -22,7 +22,8 @@
         spawnBase     : 초당 기본 출현 수 / spawnGrowth : 보스 직전까지 늘어나는 초당 출현 수
         spawnPerStage : 스테이지 번호마다 더해지는 초당 출현 수 / spawnAfterBoss : 보스 등장 이후 초당 출현 수
         hordeBase·hordePerStage : 대규모 습격 마릿수 = base + perStage × 스테이지 번호 / hordeRate : 습격 중 초당 추가 출현
-        maxEnemies    : 화면에 동시에 있을 수 있는 최대 적 수 / startMinerals : 시작 광석
+        maxEnemies    : 화면에 동시에 있을 수 있는 일반 미니언 최대 수 (중간보스·보스·비행선 제외) / startMinerals : 시작 광석
+        airRaids      : 공중 비행선 등장 (type 'air1' 강습 · 'air2' 폭격 / waves 등장 웨이브 / at 웨이브 진행률 / count 등장 수 (웨이브별 배열 가능) / gap 차례 진입 간격)
         bossHp : 이 스테이지 보스의 기본 체력 (난이도·재도전 배율만 추가로 곱해짐 · 비우면 enemies.boss.hp 기준 자동 계산)
         hpMul·dmgMul·speedMul·rewardMul : 이 스테이지 적의 체력·공격력·이동속도·처치 광석 배율 (1 = 그대로)
         enemyMix      : 일반 적 출현 비중 배율 (t4 최하급 · t3 드릴 · t2 2급 · t1 1급 사격) 0 = 안 나옴, 2 = 2배 자주
@@ -37,7 +38,7 @@
         drone       : 일꾼 드론 비용·속도·채굴 시간·운반량·생산 슬롯
         wall        : 방어벽 체력·방어·수리 시간과 비용·2중 방어벽
         skillRules · support : 스킬 아이템 사용 횟수·쿨타임, 스킬별 피해·범위·시간
-        hqResearch  : 본부기지 연구 비용·방어력·드론 채굴 속도, 스킬 아이템 가격
+        hqResearch  : 본부기지 연구 비용·방어력·레벨별 기지 체력·드론 채굴 속도, 스킬 아이템 가격
         weaponUpgrade · weapons : 배치 무기 능력치·레벨업·수리·설치 시간, 무기별 공격력·연사·사거리·빙결 등
         mainWeapons : 메인무기 목록·등급·뽑기 확률·합성·판매 골드
         grades · baseEffect · gacha : 기지 등급 능력치와 기지 뽑기 확률
@@ -63,10 +64,10 @@ const BALANCE = {
     twinMidHpMulGalaxy1: 0.7, // 첫 번째 은하에서 양쪽 무기 중간보스(포격 함선·광석 수송선) 체력 배율 (난이도 배율은 그대로 곱해짐)
     bossAttacks: ['blast'], // 보스 공격 타입 기본값 (스테이지 설정의 bossAttacks 가 우선)
     bossGuard: { fromGalaxy: 2, type: 'mid', count: 2, hpMul: 1.6, takenMul: 0.5, offsetX: 72, offsetY: 80 }, // 보스 호위: fromGalaxy 번째 은하부터 보스 등장 직전 보스 앞 좌우에 방어력 높은 중간보스 배치 (takenMul = 받는 피해 배율)
-    bombCount: 1,           // 스테이지마다 등장하는 폭탄 센티넬 수 기본값 (스테이지 설정의 bombCount 가 우선, 0 = 안 나옴)
+    bombCount: 1,           // 스테이지 전체 폭탄 센티넬 수 기본값 (스테이지 설정의 bombCount 가 우선 · 모든 웨이브에 최소 1대는 항상 등장)
     airMinAt: 0.5,          // 공중 비행선은 웨이브 진행률이 이 값 이상일 때만 등장 (웨이브 중간 이후 · 처음부터 집중 공격받지 않도록)
     airRaids: [             // 공중 비행선 습격: 방어벽·장애물을 무시하고 미니언 위로 날아와 무기·본부만 공격한 뒤 화면 아래로 사라짐
-      { type:'air1', fromStage:1, waves:'all', at:0.6, count:1, gap:1.2 },  // 기본값 (각 스테이지 설정의 airRaids 가 우선) · type = enemies 의 비행선 이름 / fromStage = 이 스테이지부터 / waves = 'all' 또는 [1,3] / at = 웨이브 진행률 / count = 동시 등장 수 / gap = 차례 진입 간격(초)
+      { type:'air1', fromStage:1, waves:'all', at:0.6, count:1, gap:1.2 },  // 기본값 (각 스테이지 설정의 airRaids 가 우선) · type = enemies 의 비행선 이름 / fromStage = 이 스테이지부터 / waves = 'all' 또는 [1,3] / at = 웨이브 진행률 (airMinAt 보다 빠르면 airMinAt 에 등장) / count = 등장 수 (숫자 또는 웨이브별 [1웨이브,2웨이브,...]) / gap = 차례 진입 간격(초)
       { type:'air2', fromStage:1, waves:[2], at:0.7, count:1, gap:1.5 } ],
     bombFirstAt: 0.35,      // 각 웨이브 진행률이 이 값일 때 폭탄 센티넬 등장 (모든 웨이브에 최소 1대 보장)
     bombPerDifficulty: 1,   // 재도전 난이도가 한 단계 오를 때마다 추가되는 폭탄 센티넬 수 (초급 +0 · 중급 +1 · 상급 +2)
@@ -80,7 +81,7 @@ const BALANCE = {
     // 중간보스 후보와 등장 확률(weight 비율) 기본값 (스테이지 설정의 midBossPool 이 우선)
     midBossPool: [ { type:'mid', weight:25 }, { type:'mid2', weight:28 }, { type:'mid4', weight:27 }, { type:'mid3', weight:20 } ],
     startMinerals: 500,     // 스테이지 시작 시 광석 (스테이지마다 초기 상태로 다시 시작)
-    maxEnemies: 40,         // 화면에 동시에 존재할 수 있는 미니언(일반 적) 최대 수 (중간보스·보스 제외)
+    maxEnemies: 40,         // 화면에 동시에 존재할 수 있는 미니언(일반 적) 최대 수 (중간보스·보스·비행선 제외)
     spawnBase: 1.7,         // 초당 기본 출현 수 (스테이지 시작 시)
     spawnGrowth: 3.3,       // 보스 직전까지 늘어나는 초당 출현 수
     spawnPerStage: 0.4,     // 스테이지마다 추가되는 초당 출현 수
@@ -103,7 +104,7 @@ const BALANCE = {
           spawnBase:1.1, spawnGrowth:3, spawnPerStage:.4, spawnAfterBoss:1.4, hordeBase:20, hordePerStage:5, hordeRate:10, maxEnemies:40,
           startMinerals:300, hpMul:0.8, dmgMul:1, speedMul:1, rewardMul:1,
           enemyMix:{ t4:1.2, t3:1, t2:.8, t1:.6 },
-          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: count = 동시 등장 수 / gap = 같은 무리 안에서 몇 초 간격으로 차례로 진입
+          airRaids:[ { type:'air1', waves:[ ], at:0.3, count:3, gap:1.2 }, { type:'air2', waves:[ ], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: waves = 등장 웨이브 ('all' 또는 [1,3], [] = 안 나옴) / count = 등장 수 (숫자 또는 웨이브별 [1웨이브,2웨이브,...]) / gap = 차례 진입 간격(초)
           midBossPool:[ { type:'mid2', weight:40 }, { type:'mid4', weight:35 }, { type:'mid3', weight:25 } ],
           bg:{ image:'space', scroll:12, hue:0, brightness:1, saturate:1, tint:'', starCount:140, starSpeed:[12, 48], starTwinkle:.45, starColors:['255,255,255', '170,210,255', '255,230,180'] } },
 		  
@@ -113,7 +114,7 @@ const BALANCE = {
           spawnBase:1.3, spawnGrowth:3, spawnPerStage:.4, spawnAfterBoss:1.4, hordeBase:20, hordePerStage:5, hordeRate:10, maxEnemies:40,
           startMinerals:300, hpMul:0.9, dmgMul:1, speedMul:1, rewardMul:1,
           enemyMix:{ t4:1.2, t3:1, t2:.8, t1:.6 },
-          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: count = 동시 등장 수 / gap = 같은 무리 안에서 몇 초 간격으로 차례로 진입
+          airRaids:[ { type:'air1', waves:[], at:0.3, count:5, gap:1.2 }, { type:'air2', waves:[], at:0.7, count:3, gap:1.5 } ], // 공중 비행선: waves = 등장 웨이브 ('all' 또는 [1,3], [] = 안 나옴) / count = 등장 수 (숫자 또는 웨이브별 [1웨이브,2웨이브,...]) / gap = 차례 진입 간격(초)
           midBossPool:[ { type:'mid2', weight:40 }, { type:'mid4', weight:35 }, { type:'mid3', weight:25 } ],
           bg:{ image:'space', scroll:12, hue:0, brightness:1, saturate:1, tint:'', starCount:140, starSpeed:[12, 48], starTwinkle:.45, starColors:['255,255,255', '170,210,255', '255,230,180'] } },
 		  
@@ -123,7 +124,7 @@ const BALANCE = {
           spawnBase:1.4, spawnGrowth:3, spawnPerStage:.4, spawnAfterBoss:1.4, hordeBase:20, hordePerStage:5, hordeRate:10, maxEnemies:40,
           startMinerals:300, hpMul:0.95, dmgMul:1, speedMul:1, rewardMul:1,
           enemyMix:{ t4:1.2, t3:1, t2:.8, t1:.6 },
-          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: count = 동시 등장 수 / gap = 같은 무리 안에서 몇 초 간격으로 차례로 진입
+          airRaids:[ { type:'air1', waves:[], at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: waves = 등장 웨이브 ('all' 또는 [1,3], [] = 안 나옴) / count = 등장 수 (숫자 또는 웨이브별 [1웨이브,2웨이브,...]) / gap = 차례 진입 간격(초)
           midBossPool:[ { type:'mid2', weight:40 }, { type:'mid4', weight:35 }, { type:'mid3', weight:25 } ],
           bg:{ image:'space', scroll:12, hue:0, brightness:1, saturate:1, tint:'', starCount:140, starSpeed:[12, 48], starTwinkle:.45, starColors:['255,255,255', '170,210,255', '255,230,180'] } },
 		  
@@ -133,7 +134,7 @@ const BALANCE = {
           spawnBase:1.5, spawnGrowth:3, spawnPerStage:.4, spawnAfterBoss:1.4, hordeBase:20, hordePerStage:5, hordeRate:10, maxEnemies:40,
           startMinerals:300, hpMul:1, dmgMul:1, speedMul:1, rewardMul:1,
           enemyMix:{ t4:1.2, t3:1, t2:.8, t1:.6 },
-          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: count = 동시 등장 수 / gap = 같은 무리 안에서 몇 초 간격으로 차례로 진입
+          airRaids:[ { type:'air1', waves:[], at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: waves = 등장 웨이브 ('all' 또는 [1,3], [] = 안 나옴) / count = 등장 수 (숫자 또는 웨이브별 [1웨이브,2웨이브,...]) / gap = 차례 진입 간격(초)
           midBossPool:[ { type:'mid2', weight:40 }, { type:'mid4', weight:35 }, { type:'mid3', weight:25 } ],
           bg:{ image:'space', scroll:12, hue:0, brightness:1, saturate:1, tint:'rgba(120,200,255,.08)', starCount:140, starSpeed:[12, 48], starTwinkle:.45, starColors:['255,255,255', '170,210,255', '255,230,180'] } },
 		  
@@ -143,7 +144,7 @@ const BALANCE = {
           spawnBase:1.5, spawnGrowth:3, spawnPerStage:.4, spawnAfterBoss:1.4, hordeBase:20, hordePerStage:5, hordeRate:10, maxEnemies:40,
           startMinerals:300, hpMul:1, dmgMul:1, speedMul:1, rewardMul:1,
           enemyMix:{ t4:1.2, t3:1, t2:.8, t1:.6 },
-          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: count = 동시 등장 수 / gap = 같은 무리 안에서 몇 초 간격으로 차례로 진입
+          airRaids:[ { type:'air1', waves:[3], at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: waves = 등장 웨이브 ('all' 또는 [1,3], [] = 안 나옴) / count = 등장 수 (숫자 또는 웨이브별 [1웨이브,2웨이브,...]) / gap = 차례 진입 간격(초)
           midBossPool:[ { type:'mid2', weight:40 }, { type:'mid4', weight:35 }, { type:'mid3', weight:25 } ],
           bg:{ image:'space', scroll:12, hue:0, brightness:1, saturate:1, tint:'', starCount:140, starSpeed:[12, 48], starTwinkle:.45, starColors:['255,255,255', '170,210,255', '255,230,180'] } },
 		  
@@ -153,7 +154,7 @@ const BALANCE = {
           spawnBase:1.5, spawnGrowth:3, spawnPerStage:.4, spawnAfterBoss:1.4, hordeBase:20, hordePerStage:5, hordeRate:10, maxEnemies:40,
           startMinerals:300, hpMul:1.1, dmgMul:1, speedMul:1, rewardMul:1,
           enemyMix:{ t4:1.2, t3:1, t2:.8, t1:.6 },
-          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: count = 동시 등장 수 / gap = 같은 무리 안에서 몇 초 간격으로 차례로 진입
+          airRaids:[ { type:'air1', waves:[3,4], at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: waves = 등장 웨이브 ('all' 또는 [1,3], [] = 안 나옴) / count = 등장 수 (숫자 또는 웨이브별 [1웨이브,2웨이브,...]) / gap = 차례 진입 간격(초)
           midBossPool:[ { type:'mid2', weight:40 }, { type:'mid4', weight:35 }, { type:'mid3', weight:25 } ],
           bg:{ image:'space', scroll:12, hue:0, brightness:1, saturate:1, tint:'', starCount:140, starSpeed:[12, 48], starTwinkle:.45, starColors:['255,255,255', '170,210,255', '255,230,180'] } },
 		  
@@ -163,7 +164,7 @@ const BALANCE = {
           spawnBase:1.5, spawnGrowth:3, spawnPerStage:.4, spawnAfterBoss:1.4, hordeBase:20, hordePerStage:5, hordeRate:10, maxEnemies:40,
           startMinerals:300, hpMul:1.1, dmgMul:1, speedMul:1, rewardMul:1,
           enemyMix:{ t4:1.2, t3:1, t2:.8, t1:.6 },
-          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: count = 동시 등장 수 / gap = 같은 무리 안에서 몇 초 간격으로 차례로 진입
+          airRaids:[ { type:'air1', waves:[3,4], at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: waves = 등장 웨이브 ('all' 또는 [1,3], [] = 안 나옴) / count = 등장 수 (숫자 또는 웨이브별 [1웨이브,2웨이브,...]) / gap = 차례 진입 간격(초)
           midBossPool:[ { type:'mid2', weight:40 }, { type:'mid4', weight:35 }, { type:'mid3', weight:25 } ],
           bg:{ image:'space', scroll:12, hue:0, brightness:1, saturate:1, tint:'', starCount:140, starSpeed:[12, 48], starTwinkle:.45, starColors:['255,255,255', '170,210,255', '255,230,180'] } },
       ] },
@@ -173,61 +174,61 @@ const BALANCE = {
       stages: [
         { // ----- 2-1 -----
           name:'보랏빛 회랑', bossImage:'en_bossB', bossHue:280, bossHp:18000, bossCount:1, bombCount:1, bossAttacks:['blast'],
-          waves:3, waveLength:44, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
+          waves:4, waveLength:44, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
           spawnBase:1.7, spawnGrowth:3.3, spawnPerStage:.4, spawnAfterBoss:1.4, hordeBase:20, hordePerStage:5, hordeRate:10, maxEnemies:40,
           startMinerals:300, hpMul:1, dmgMul:1, speedMul:1.05, rewardMul:1,
           enemyMix:{ t4:1, t3:1.2, t2:1, t1:.8 },
-          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: count = 동시 등장 수 / gap = 같은 무리 안에서 몇 초 간격으로 차례로 진입
+          airRaids:[ { type:'air1', waves:[1,2,3,4], at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: waves = 등장 웨이브 ('all' 또는 [1,3], [] = 안 나옴) / count = 등장 수 (숫자 또는 웨이브별 [1웨이브,2웨이브,...]) / gap = 차례 진입 간격(초)
           midBossPool:[ { type:'mid', weight:25 }, { type:'mid2', weight:28 }, { type:'mid4', weight:27 }, { type:'mid3', weight:20 } ],
           bg:{ image:'bg2', scroll:16, hue:0, brightness:1, saturate:1, tint:'', starCount:150, starSpeed:[18, 60], starTwinkle:.5, starColors:['255,255,255', '230,180,255', '255,190,230'] } },
 		  
         { // ----- 2-2 -----
           name:'막대 중심부', bossImage:'en_bossA', bossHue:320, bossHp:22000, bossCount:1, bombCount:1, bossAttacks:['blast'],
-          waves:3, waveLength:44, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
+          waves:4, waveLength:44, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
           spawnBase:1.7, spawnGrowth:3.3, spawnPerStage:.4, spawnAfterBoss:1.4, hordeBase:20, hordePerStage:5, hordeRate:10, maxEnemies:40,
           startMinerals:300, hpMul:1.03, dmgMul:1, speedMul:1.05, rewardMul:1,
           enemyMix:{ t4:1, t3:1.2, t2:1, t1:.8 },
-          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: count = 동시 등장 수 / gap = 같은 무리 안에서 몇 초 간격으로 차례로 진입
+          airRaids:[ { type:'air1', waves:[1,2,3,4], at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: waves = 등장 웨이브 ('all' 또는 [1,3], [] = 안 나옴) / count = 등장 수 (숫자 또는 웨이브별 [1웨이브,2웨이브,...]) / gap = 차례 진입 간격(초)
           midBossPool:[ { type:'mid', weight:25 }, { type:'mid2', weight:28 }, { type:'mid4', weight:27 }, { type:'mid3', weight:20 } ],
           bg:{ image:'bg2', scroll:16, hue:0, brightness:1, saturate:1, tint:'', starCount:150, starSpeed:[18, 60], starTwinkle:.5, starColors:['255,255,255', '230,180,255', '255,190,230'] } },
 		  
         { // ----- 2-3 -----
           name:'베가 정거장', bossImage:'en_bossB', bossHue:240, bossHp:26000, bossCount:1, bombCount:1, bossAttacks:['blast'],
-          waves:3, waveLength:44, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
+          waves:4, waveLength:44, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
           spawnBase:1.7, spawnGrowth:3.3, spawnPerStage:.4, spawnAfterBoss:1.4, hordeBase:20, hordePerStage:5, hordeRate:10, maxEnemies:40,
           startMinerals:300, hpMul:1.06, dmgMul:1, speedMul:1.05, rewardMul:1,
           enemyMix:{ t4:1, t3:1.2, t2:1, t1:.8 },
-          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: count = 동시 등장 수 / gap = 같은 무리 안에서 몇 초 간격으로 차례로 진입
+          airRaids:[ { type:'air1', waves:[1,2,3,4], at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: waves = 등장 웨이브 ('all' 또는 [1,3], [] = 안 나옴) / count = 등장 수 (숫자 또는 웨이브별 [1웨이브,2웨이브,...]) / gap = 차례 진입 간격(초)
           midBossPool:[ { type:'mid', weight:25 }, { type:'mid2', weight:28 }, { type:'mid4', weight:27 }, { type:'mid3', weight:20 } ],
           bg:{ image:'bg2', scroll:16, hue:0, brightness:1, saturate:1, tint:'', starCount:150, starSpeed:[18, 60], starTwinkle:.5, starColors:['255,255,255', '230,180,255', '255,190,230'] } },
 		  
         { // ----- 2-4 -----
           name:'중력 소용돌이', bossImage:'en_bossA', bossHue:300, bossHp:30000, bossCount:1, bombCount:1, bossAttacks:['blast'],
-          waves:3, waveLength:44, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
+          waves:4, waveLength:44, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
           spawnBase:1.7, spawnGrowth:3.3, spawnPerStage:.4, spawnAfterBoss:1.4, hordeBase:20, hordePerStage:5, hordeRate:10, maxEnemies:40,
           startMinerals:300, hpMul:1.09, dmgMul:1, speedMul:1.05, rewardMul:1,
           enemyMix:{ t4:1, t3:1.2, t2:1.6, t1:.8 },
-          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: count = 동시 등장 수 / gap = 같은 무리 안에서 몇 초 간격으로 차례로 진입
+          airRaids:[ { type:'air1', waves:[1,2,3,4], at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: waves = 등장 웨이브 ('all' 또는 [1,3], [] = 안 나옴) / count = 등장 수 (숫자 또는 웨이브별 [1웨이브,2웨이브,...]) / gap = 차례 진입 간격(초)
           midBossPool:[ { type:'mid', weight:25 }, { type:'mid2', weight:28 }, { type:'mid4', weight:27 }, { type:'mid3', weight:20 } ],
           bg:{ image:'bg2', scroll:16, hue:0, brightness:1, saturate:1, tint:'', starCount:150, starSpeed:[18, 60], starTwinkle:.5, starColors:['255,255,255', '230,180,255', '255,190,230'] } },
 		  
         { // ----- 2-5 -----
           name:'자줏빛 장막', bossImage:'en_bossB', bossHue:0, bossHp:34000, bossCount:1, bombCount:1, bossAttacks:['blast'],
-          waves:3, waveLength:44, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
+          waves:5, waveLength:44, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
           spawnBase:1.7, spawnGrowth:3.3, spawnPerStage:.4, spawnAfterBoss:1.4, hordeBase:20, hordePerStage:5, hordeRate:10, maxEnemies:40,
           startMinerals:300, hpMul:1.12, dmgMul:1, speedMul:1.05, rewardMul:1,
           enemyMix:{ t4:1, t3:1.2, t2:1, t1:.8 },
-          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: count = 동시 등장 수 / gap = 같은 무리 안에서 몇 초 간격으로 차례로 진입
+          airRaids:[ { type:'air1', waves:[1,2,3,4,5], at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[5], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: waves = 등장 웨이브 ('all' 또는 [1,3], [] = 안 나옴) / count = 등장 수 (숫자 또는 웨이브별 [1웨이브,2웨이브,...]) / gap = 차례 진입 간격(초)
           midBossPool:[ { type:'mid', weight:25 }, { type:'mid2', weight:28 }, { type:'mid4', weight:27 }, { type:'mid3', weight:20 } ],
           bg:{ image:'bg2', scroll:16, hue:0, brightness:1, saturate:1, tint:'', starCount:150, starSpeed:[18, 60], starTwinkle:.5, starColors:['255,255,255', '230,180,255', '255,190,230'] } },
 		  
         { // ----- 2-6 -----
           name:'베가 요새', bossImage:'en_bossA', bossHue:260, bossHp:38000, bossCount:2, bombCount:1, bossAttacks:['blast','missile'],
-          waves:4, waveLength:44, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
+          waves:5, waveLength:44, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
           spawnBase:1.7, spawnGrowth:3.3, spawnPerStage:.4, spawnAfterBoss:1.4, hordeBase:20, hordePerStage:5, hordeRate:10, maxEnemies:40,
           startMinerals:300, hpMul:1.265, dmgMul:1, speedMul:1.05, rewardMul:1,
           enemyMix:{ t4:1, t3:1.2, t2:1, t1:.8 },
-          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: count = 동시 등장 수 / gap = 같은 무리 안에서 몇 초 간격으로 차례로 진입
+          airRaids:[ { type:'air1', waves:[1,2,3,4,5], at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[4,5], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: waves = 등장 웨이브 ('all' 또는 [1,3], [] = 안 나옴) / count = 등장 수 (숫자 또는 웨이브별 [1웨이브,2웨이브,...]) / gap = 차례 진입 간격(초)
           midBossPool:[ { type:'mid', weight:25 }, { type:'mid2', weight:28 }, { type:'mid4', weight:27 }, { type:'mid3', weight:20 } ],
           bg:{ image:'bg2', scroll:16, hue:0, brightness:1, saturate:1, tint:'', starCount:150, starSpeed:[18, 60], starTwinkle:.5, starColors:['255,255,255', '230,180,255', '255,190,230'] } },
       ] },
@@ -238,61 +239,61 @@ const BALANCE = {
       stages: [
         { // ----- 3-1 -----
           name:'초록 고리', bossImage:'en_bossA', bossHue:120, bossHp:30000, bossCount:1, bombCount:1, bossAttacks:['blast','missile'],
-          waves:3, waveLength:46, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
+          waves:4, waveLength:46, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
           spawnBase:1.8, spawnGrowth:3.5, spawnPerStage:.4, spawnAfterBoss:1.4, hordeBase:20, hordePerStage:5, hordeRate:10, maxEnemies:40,
           startMinerals:300, hpMul:1, dmgMul:1.05, speedMul:1.05, rewardMul:1.05,
           enemyMix:{ t4:.9, t3:1.2, t2:1.2, t1:1 },
-          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: count = 동시 등장 수 / gap = 같은 무리 안에서 몇 초 간격으로 차례로 진입
+          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2,3,4,5], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: waves = 등장 웨이브 ('all' 또는 [1,3], [] = 안 나옴) / count = 등장 수 (숫자 또는 웨이브별 [1웨이브,2웨이브,...]) / gap = 차례 진입 간격(초)
           midBossPool:[ { type:'mid', weight:35 }, { type:'mid2', weight:25 }, { type:'mid4', weight:25 }, { type:'mid3', weight:15 } ],
           bg:{ image:'bg3', scroll:20, hue:0, brightness:1, saturate:1, tint:'', starCount:160, starSpeed:[24, 72], starTwinkle:.45, starColors:['255,255,255', '180,255,220', '220,255,160'] } },
 		  
         { // ----- 3-2 -----
           name:'고리 틈새', bossImage:'en_bossB', bossHue:160, bossHp:34000, bossCount:1, bombCount:1, bossAttacks:['blast','missile'],
-          waves:3, waveLength:46, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
+          waves:4, waveLength:46, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
           spawnBase:1.8, spawnGrowth:3.5, spawnPerStage:.4, spawnAfterBoss:1.4, hordeBase:20, hordePerStage:5, hordeRate:10, maxEnemies:40,
           startMinerals:300, hpMul:1.03, dmgMul:1.05, speedMul:1.05, rewardMul:1.05,
           enemyMix:{ t4:.9, t3:1.2, t2:1.2, t1:1 },
-          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: count = 동시 등장 수 / gap = 같은 무리 안에서 몇 초 간격으로 차례로 진입
+          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[1,2,3,4,5], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: waves = 등장 웨이브 ('all' 또는 [1,3], [] = 안 나옴) / count = 등장 수 (숫자 또는 웨이브별 [1웨이브,2웨이브,...]) / gap = 차례 진입 간격(초)
           midBossPool:[ { type:'mid', weight:35 }, { type:'mid2', weight:25 }, { type:'mid4', weight:25 }, { type:'mid3', weight:15 } ],
           bg:{ image:'bg3', scroll:20, hue:0, brightness:1, saturate:1, tint:'', starCount:160, starSpeed:[24, 72], starTwinkle:.45, starColors:['255,255,255', '180,255,220', '220,255,160'] } },
 		  
         { // ----- 3-3 -----
           name:'타우 광산', bossImage:'en_bossA', bossHue:80, bossHp:38000, bossCount:1, bombCount:1, bossAttacks:['blast','missile'],
-          waves:3, waveLength:46, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
+          waves:4, waveLength:46, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
           spawnBase:1.8, spawnGrowth:3.5, spawnPerStage:.4, spawnAfterBoss:1.4, hordeBase:20, hordePerStage:5, hordeRate:10, maxEnemies:40,
           startMinerals:300, hpMul:1.06, dmgMul:1.05, speedMul:1.05, rewardMul:1.2,
           enemyMix:{ t4:.9, t3:1.2, t2:1.2, t1:1 },
-          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: count = 동시 등장 수 / gap = 같은 무리 안에서 몇 초 간격으로 차례로 진입
+          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: waves = 등장 웨이브 ('all' 또는 [1,3], [] = 안 나옴) / count = 등장 수 (숫자 또는 웨이브별 [1웨이브,2웨이브,...]) / gap = 차례 진입 간격(초)
           midBossPool:[ { type:'mid', weight:35 }, { type:'mid2', weight:25 }, { type:'mid4', weight:25 }, { type:'mid3', weight:15 } ],
           bg:{ image:'bg3', scroll:20, hue:0, brightness:1, saturate:1, tint:'', starCount:160, starSpeed:[24, 72], starTwinkle:.45, starColors:['255,255,255', '180,255,220', '220,255,160'] } },
 		  
         { // ----- 3-4 -----
           name:'녹색 폭풍', bossImage:'en_bossB', bossHue:120, bossHp:42000, bossCount:1, bombCount:1, bossAttacks:['blast','missile'],
-          waves:3, waveLength:46, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
+          waves:4, waveLength:46, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
           spawnBase:1.8, spawnGrowth:3.5, spawnPerStage:.4, spawnAfterBoss:1.4, hordeBase:20, hordePerStage:5, hordeRate:10, maxEnemies:40,
           startMinerals:300, hpMul:1.09, dmgMul:1.05, speedMul:1.05, rewardMul:1.05,
           enemyMix:{ t4:.9, t3:1.2, t2:1.2, t1:1 },
-          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: count = 동시 등장 수 / gap = 같은 무리 안에서 몇 초 간격으로 차례로 진입
+          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: waves = 등장 웨이브 ('all' 또는 [1,3], [] = 안 나옴) / count = 등장 수 (숫자 또는 웨이브별 [1웨이브,2웨이브,...]) / gap = 차례 진입 간격(초)
           midBossPool:[ { type:'mid', weight:35 }, { type:'mid2', weight:25 }, { type:'mid4', weight:25 }, { type:'mid3', weight:15 } ],
           bg:{ image:'bg3', scroll:20, hue:0, brightness:1, saturate:1, tint:'', starCount:160, starSpeed:[24, 72], starTwinkle:.45, starColors:['255,255,255', '180,255,220', '220,255,160'] } },
 		  
         { // ----- 3-5 -----
           name:'고리 내부', bossImage:'en_bossA', bossHue:180, bossHp:46000, bossCount:1, bombCount:1, bossAttacks:['blast','missile'],
-          waves:3, waveLength:46, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
+          waves:5, waveLength:46, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
           spawnBase:1.8, spawnGrowth:3.5, spawnPerStage:.4, spawnAfterBoss:1.4, hordeBase:20, hordePerStage:5, hordeRate:10, maxEnemies:40,
           startMinerals:300, hpMul:1.12, dmgMul:1.05, speedMul:1.05, rewardMul:1.05,
           enemyMix:{ t4:.9, t3:1.2, t2:1.2, t1:1 },
-          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: count = 동시 등장 수 / gap = 같은 무리 안에서 몇 초 간격으로 차례로 진입
+          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: waves = 등장 웨이브 ('all' 또는 [1,3], [] = 안 나옴) / count = 등장 수 (숫자 또는 웨이브별 [1웨이브,2웨이브,...]) / gap = 차례 진입 간격(초)
           midBossPool:[ { type:'mid', weight:35 }, { type:'mid2', weight:25 }, { type:'mid4', weight:25 }, { type:'mid3', weight:15 } ],
           bg:{ image:'bg3', scroll:20, hue:0, brightness:1, saturate:1, tint:'', starCount:160, starSpeed:[24, 72], starTwinkle:.45, starColors:['255,255,255', '180,255,220', '220,255,160'] } },
 		  
         { // ----- 3-6 -----
           name:'타우 핵', bossImage:'en_bossB', bossHue:100, bossHp:52000, bossCount:2, bombCount:1, bossAttacks:['blast','missile'],
-          waves:4, waveLength:46, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
+          waves:5, waveLength:46, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
           spawnBase:1.8, spawnGrowth:3.5, spawnPerStage:.4, spawnAfterBoss:1.4, hordeBase:20, hordePerStage:5, hordeRate:10, maxEnemies:40,
           startMinerals:300, hpMul:1.265, dmgMul:1.05, speedMul:1.05, rewardMul:1.05,
           enemyMix:{ t4:.9, t3:1.2, t2:1.2, t1:1 },
-          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: count = 동시 등장 수 / gap = 같은 무리 안에서 몇 초 간격으로 차례로 진입
+          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: waves = 등장 웨이브 ('all' 또는 [1,3], [] = 안 나옴) / count = 등장 수 (숫자 또는 웨이브별 [1웨이브,2웨이브,...]) / gap = 차례 진입 간격(초)
           midBossPool:[ { type:'mid', weight:35 }, { type:'mid2', weight:25 }, { type:'mid4', weight:25 }, { type:'mid3', weight:15 } ],
           bg:{ image:'bg3', scroll:20, hue:0, brightness:1, saturate:1, tint:'', starCount:160, starSpeed:[24, 72], starTwinkle:.45, starColors:['255,255,255', '180,255,220', '220,255,160'] } },
 		  
@@ -304,61 +305,61 @@ const BALANCE = {
       stages: [
         { // ----- 4-1 -----
           name:'황금 성운', bossImage:'en_bossB', bossHue:40, bossHp:40000, bossCount:1, bombCount:1, bossAttacks:['blast','missile'],
-          waves:3, waveLength:46, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
+          waves:5, waveLength:46, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
           spawnBase:1.9, spawnGrowth:3.6, spawnPerStage:.4, spawnAfterBoss:1.4, hordeBase:20, hordePerStage:5, hordeRate:10, maxEnemies:40,
           startMinerals:300, hpMul:1, dmgMul:1.1, speedMul:1.1, rewardMul:1.1,
           enemyMix:{ t4:.8, t3:1.1, t2:1.3, t1:1.3 },
-          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: count = 동시 등장 수 / gap = 같은 무리 안에서 몇 초 간격으로 차례로 진입
+          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: waves = 등장 웨이브 ('all' 또는 [1,3], [] = 안 나옴) / count = 등장 수 (숫자 또는 웨이브별 [1웨이브,2웨이브,...]) / gap = 차례 진입 간격(초)
           midBossPool:[ { type:'mid', weight:35 }, { type:'mid2', weight:20 }, { type:'mid4', weight:30 }, { type:'mid3', weight:15 } ],
           bg:{ image:'bg4', scroll:24, hue:0, brightness:1, saturate:1, tint:'', starCount:170, starSpeed:[30, 84], starTwinkle:.4, starColors:['255,255,255', '255,230,170', '255,200,140'] } },
 		  
         { // ----- 4-2 -----
           name:'타원 궤도', bossImage:'en_bossA', bossHue:20, bossHp:45000, bossCount:1, bombCount:1, bossAttacks:['blast','missile'],
-          waves:3, waveLength:46, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
+          waves:5, waveLength:46, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
           spawnBase:1.9, spawnGrowth:3.6, spawnPerStage:.4, spawnAfterBoss:1.4, hordeBase:20, hordePerStage:5, hordeRate:10, maxEnemies:40,
           startMinerals:300, hpMul:1.03, dmgMul:1.1, speedMul:1.1, rewardMul:1.1,
           enemyMix:{ t4:.8, t3:1.1, t2:1.3, t1:1.3 },
-          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: count = 동시 등장 수 / gap = 같은 무리 안에서 몇 초 간격으로 차례로 진입
+          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: waves = 등장 웨이브 ('all' 또는 [1,3], [] = 안 나옴) / count = 등장 수 (숫자 또는 웨이브별 [1웨이브,2웨이브,...]) / gap = 차례 진입 간격(초)
           midBossPool:[ { type:'mid', weight:35 }, { type:'mid2', weight:20 }, { type:'mid4', weight:30 }, { type:'mid3', weight:15 } ],
           bg:{ image:'bg4', scroll:24, hue:0, brightness:1, saturate:1, tint:'', starCount:170, starSpeed:[30, 84], starTwinkle:.4, starColors:['255,255,255', '255,230,170', '255,200,140'] } },
 		  
         { // ----- 4-3 -----
           name:'시그마 항로', bossImage:'en_bossB', bossHue:60, bossHp:50000, bossCount:1, bombCount:1, bossAttacks:['blast','missile'],
-          waves:3, waveLength:46, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
+          waves:5, waveLength:46, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
           spawnBase:1.9, spawnGrowth:3.6, spawnPerStage:.4, spawnAfterBoss:1.4, hordeBase:20, hordePerStage:5, hordeRate:10, maxEnemies:40,
           startMinerals:300, hpMul:1.06, dmgMul:1.1, speedMul:1.1, rewardMul:1.1,
           enemyMix:{ t4:.8, t3:1.1, t2:1.3, t1:1.3 },
-          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: count = 동시 등장 수 / gap = 같은 무리 안에서 몇 초 간격으로 차례로 진입
+          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: waves = 등장 웨이브 ('all' 또는 [1,3], [] = 안 나옴) / count = 등장 수 (숫자 또는 웨이브별 [1웨이브,2웨이브,...]) / gap = 차례 진입 간격(초)
           midBossPool:[ { type:'mid', weight:35 }, { type:'mid2', weight:20 }, { type:'mid4', weight:30 }, { type:'mid3', weight:15 } ],
           bg:{ image:'bg4', scroll:24, hue:0, brightness:1, saturate:1, tint:'', starCount:170, starSpeed:[30, 84], starTwinkle:.4, starColors:['255,255,255', '255,230,170', '255,200,140'] } },
 		  
         { // ----- 4-4 -----
           name:'태양풍 지대', bossImage:'en_bossA', bossHue:0, bossHp:55000, bossCount:1, bombCount:1, bossAttacks:['blast','missile'],
-          waves:3, waveLength:46, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
+          waves:5, waveLength:46, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
           spawnBase:1.9, spawnGrowth:3.6, spawnPerStage:.4, spawnAfterBoss:1.4, hordeBase:20, hordePerStage:5, hordeRate:10, maxEnemies:40,
           startMinerals:300, hpMul:1.09, dmgMul:1.1, speedMul:1.2, rewardMul:1.1,
           enemyMix:{ t4:.8, t3:1.1, t2:1.3, t1:1.3 },
-          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: count = 동시 등장 수 / gap = 같은 무리 안에서 몇 초 간격으로 차례로 진입
+          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: waves = 등장 웨이브 ('all' 또는 [1,3], [] = 안 나옴) / count = 등장 수 (숫자 또는 웨이브별 [1웨이브,2웨이브,...]) / gap = 차례 진입 간격(초)
           midBossPool:[ { type:'mid', weight:35 }, { type:'mid2', weight:20 }, { type:'mid4', weight:30 }, { type:'mid3', weight:15 } ],
           bg:{ image:'bg4', scroll:24, hue:0, brightness:1, saturate:1, tint:'', starCount:170, starSpeed:[30, 84], starTwinkle:.4, starColors:['255,255,255', '255,230,170', '255,200,140'] } },
 		  
         { // ----- 4-5 -----
           name:'불타는 장벽', bossImage:'en_bossB', bossHue:30, bossHp:60000, bossCount:1, bombCount:1, bossAttacks:['blast','missile'],
-          waves:3, waveLength:46, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
+          waves:5, waveLength:46, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
           spawnBase:1.9, spawnGrowth:3.6, spawnPerStage:.4, spawnAfterBoss:1.4, hordeBase:20, hordePerStage:5, hordeRate:10, maxEnemies:40,
           startMinerals:300, hpMul:1.12, dmgMul:1.1, speedMul:1.1, rewardMul:1.1,
           enemyMix:{ t4:.8, t3:1.1, t2:1.3, t1:1.3 },
-          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: count = 동시 등장 수 / gap = 같은 무리 안에서 몇 초 간격으로 차례로 진입
+          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: waves = 등장 웨이브 ('all' 또는 [1,3], [] = 안 나옴) / count = 등장 수 (숫자 또는 웨이브별 [1웨이브,2웨이브,...]) / gap = 차례 진입 간격(초)
           midBossPool:[ { type:'mid', weight:35 }, { type:'mid2', weight:20 }, { type:'mid4', weight:30 }, { type:'mid3', weight:15 } ],
           bg:{ image:'bg4', scroll:24, hue:0, brightness:1, saturate:1, tint:'', starCount:170, starSpeed:[30, 84], starTwinkle:.4, starColors:['255,255,255', '255,230,170', '255,200,140'] } },
 		  
         { // ----- 4-6 -----
           name:'시그마 왕좌', bossImage:'en_bossA', bossHue:50, bossHp:66000, bossCount:2, bombCount:1, bossAttacks:['blast','missile'],
-          waves:4, waveLength:46, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
+          waves:5, waveLength:46, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
           spawnBase:1.9, spawnGrowth:3.6, spawnPerStage:.4, spawnAfterBoss:1.4, hordeBase:20, hordePerStage:5, hordeRate:10, maxEnemies:40,
           startMinerals:300, hpMul:1.265, dmgMul:1.1, speedMul:1.1, rewardMul:1.1,
           enemyMix:{ t4:.8, t3:1.1, t2:1.3, t1:1.3 },
-          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: count = 동시 등장 수 / gap = 같은 무리 안에서 몇 초 간격으로 차례로 진입
+          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: waves = 등장 웨이브 ('all' 또는 [1,3], [] = 안 나옴) / count = 등장 수 (숫자 또는 웨이브별 [1웨이브,2웨이브,...]) / gap = 차례 진입 간격(초)
           midBossPool:[ { type:'mid', weight:35 }, { type:'mid2', weight:20 }, { type:'mid4', weight:30 }, { type:'mid3', weight:15 } ],
           bg:{ image:'bg4', scroll:24, hue:0, brightness:1, saturate:1, tint:'', starCount:170, starSpeed:[30, 84], starTwinkle:.4, starColors:['255,255,255', '255,230,170', '255,200,140'] } },
 		  
@@ -370,51 +371,51 @@ const BALANCE = {
       stages: [
         { // ----- 5-1 -----
           name:'붉은 폐허', bossImage:'en_bossA', bossHue:0, bossHp:55000, bossCount:1, bombCount:1, bossAttacks:['blast','missile'],
-          waves:3, waveLength:48, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
+          waves:5, waveLength:48, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
           spawnBase:2, spawnGrowth:3.8, spawnPerStage:.4, spawnAfterBoss:1.4, hordeBase:20, hordePerStage:5, hordeRate:10, maxEnemies:40,
           startMinerals:300, hpMul:1, dmgMul:1.15, speedMul:1.1, rewardMul:1.2,
           enemyMix:{ t4:.7, t3:1, t2:1.4, t1:1.6 },
-          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: count = 동시 등장 수 / gap = 같은 무리 안에서 몇 초 간격으로 차례로 진입
+          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: waves = 등장 웨이브 ('all' 또는 [1,3], [] = 안 나옴) / count = 등장 수 (숫자 또는 웨이브별 [1웨이브,2웨이브,...]) / gap = 차례 진입 간격(초)
           midBossPool:[ { type:'mid', weight:40 }, { type:'mid2', weight:20 }, { type:'mid4', weight:30 }, { type:'mid3', weight:10 } ],
           bg:{ image:'space', scroll:30, hue:330, brightness:.9, saturate:1.3, tint:'rgba(255,60,60,.08)', starCount:180, starSpeed:[36, 102], starTwinkle:.55, starColors:['255,255,255', '255,170,170', '255,210,160'] } },
 		  
         { // ----- 5-2 -----
           name:'혼돈의 띠', bossImage:'en_bossB', bossHue:340, bossHp:60000, bossCount:1, bombCount:1, bossAttacks:['blast','missile'],
-          waves:3, waveLength:48, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
+          waves:5, waveLength:48, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
           spawnBase:2, spawnGrowth:3.8, spawnPerStage:.4, spawnAfterBoss:1.4, hordeBase:20, hordePerStage:5, hordeRate:10, maxEnemies:40,
           startMinerals:300, hpMul:1.03, dmgMul:1.15, speedMul:1.1, rewardMul:1.2,
           enemyMix:{ t4:.7, t3:1, t2:1.4, t1:1.6 },
-          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: count = 동시 등장 수 / gap = 같은 무리 안에서 몇 초 간격으로 차례로 진입
+          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: waves = 등장 웨이브 ('all' 또는 [1,3], [] = 안 나옴) / count = 등장 수 (숫자 또는 웨이브별 [1웨이브,2웨이브,...]) / gap = 차례 진입 간격(초)
           midBossPool:[ { type:'mid', weight:40 }, { type:'mid2', weight:20 }, { type:'mid4', weight:30 }, { type:'mid3', weight:10 } ],
           bg:{ image:'space', scroll:30, hue:330, brightness:.9, saturate:1.3, tint:'rgba(255,60,60,.08)', starCount:180, starSpeed:[36, 102], starTwinkle:.55, starColors:['255,255,255', '255,170,170', '255,210,160'] } },
 		  
         { // ----- 5-3 -----
           name:'네메시스 둥지', bossImage:'en_bossA', bossHue:20, bossHp:65000, bossCount:1, bombCount:1, bossAttacks:['blast','missile'],
-          waves:3, waveLength:48, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
+          waves:5, waveLength:48, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
           spawnBase:2, spawnGrowth:3.8, spawnPerStage:.4, spawnAfterBoss:1.4, hordeBase:20, hordePerStage:5, hordeRate:10, maxEnemies:40,
           startMinerals:300, hpMul:1.06, dmgMul:1.15, speedMul:1.1, rewardMul:1.2,
           enemyMix:{ t4:.7, t3:1, t2:1.4, t1:1.6 },
-          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: count = 동시 등장 수 / gap = 같은 무리 안에서 몇 초 간격으로 차례로 진입
+          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: waves = 등장 웨이브 ('all' 또는 [1,3], [] = 안 나옴) / count = 등장 수 (숫자 또는 웨이브별 [1웨이브,2웨이브,...]) / gap = 차례 진입 간격(초)
           midBossPool:[ { type:'mid', weight:40 }, { type:'mid2', weight:20 }, { type:'mid4', weight:30 }, { type:'mid3', weight:10 } ],
           bg:{ image:'space', scroll:30, hue:330, brightness:.9, saturate:1.3, tint:'rgba(255,60,60,.08)', starCount:180, starSpeed:[36, 102], starTwinkle:.55, starColors:['255,255,255', '255,170,170', '255,210,160'] } },
 		  
         { // ----- 5-4 -----
           name:'피의 성운', bossImage:'en_bossB', bossHue:0, bossHp:70000, bossCount:1, bombCount:1, bossAttacks:['blast','missile'],
-          waves:3, waveLength:48, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
+          waves:5, waveLength:48, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
           spawnBase:2, spawnGrowth:3.8, spawnPerStage:.4, spawnAfterBoss:1.4, hordeBase:20, hordePerStage:5, hordeRate:10, maxEnemies:40,
           startMinerals:300, hpMul:1.09, dmgMul:1.15, speedMul:1.1, rewardMul:1.2,
           enemyMix:{ t4:.7, t3:1, t2:1.4, t1:1.6 },
-          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: count = 동시 등장 수 / gap = 같은 무리 안에서 몇 초 간격으로 차례로 진입
+          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: waves = 등장 웨이브 ('all' 또는 [1,3], [] = 안 나옴) / count = 등장 수 (숫자 또는 웨이브별 [1웨이브,2웨이브,...]) / gap = 차례 진입 간격(초)
           midBossPool:[ { type:'mid', weight:40 }, { type:'mid2', weight:20 }, { type:'mid4', weight:30 }, { type:'mid3', weight:10 } ],
           bg:{ image:'space', scroll:30, hue:330, brightness:.9, saturate:1.3, tint:'rgba(255,60,60,.08)', starCount:180, starSpeed:[36, 102], starTwinkle:.55, starColors:['255,255,255', '255,170,170', '255,210,160'] } },
 		  
         { // ----- 5-5 -----
           name:'최후의 방벽', bossImage:'en_bossA', bossHue:320, bossHp:75000, bossCount:1, bombCount:1, bossAttacks:['blast','missile'],
-          waves:4, waveLength:48, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
+          waves:5, waveLength:48, waveGap:4, bossDelay:6, midBossWave:'middle', midBossAtWave:.4, hordeAtWave:.55,
           spawnBase:2, spawnGrowth:3.8, spawnPerStage:.4, spawnAfterBoss:1.4, hordeBase:20, hordePerStage:5, hordeRate:10, maxEnemies:40,
           startMinerals:300, hpMul:1.12, dmgMul:1.15, speedMul:1.1, rewardMul:1.2,
           enemyMix:{ t4:.7, t3:1, t2:1.4, t1:1.6 },
-          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: count = 동시 등장 수 / gap = 같은 무리 안에서 몇 초 간격으로 차례로 진입
+          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: waves = 등장 웨이브 ('all' 또는 [1,3], [] = 안 나옴) / count = 등장 수 (숫자 또는 웨이브별 [1웨이브,2웨이브,...]) / gap = 차례 진입 간격(초)
           midBossPool:[ { type:'mid', weight:40 }, { type:'mid2', weight:20 }, { type:'mid4', weight:30 }, { type:'mid3', weight:10 } ],
           bg:{ image:'space', scroll:30, hue:330, brightness:.9, saturate:1.3, tint:'rgba(255,60,60,.08)', starCount:180, starSpeed:[36, 102], starTwinkle:.55, starColors:['255,255,255', '255,170,170', '255,210,160'] } },
 		  
@@ -424,7 +425,7 @@ const BALANCE = {
           spawnBase:2, spawnGrowth:3.8, spawnPerStage:.4, spawnAfterBoss:1.4, hordeBase:20, hordePerStage:5, hordeRate:10, maxEnemies:40,
           startMinerals:300, hpMul:1.38, dmgMul:1.15, speedMul:1.1, rewardMul:1.2,
           enemyMix:{ t4:.7, t3:1, t2:1.4, t1:1.6 },
-          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: count = 동시 등장 수 / gap = 같은 무리 안에서 몇 초 간격으로 차례로 진입
+          airRaids:[ { type:'air1', waves:'all', at:0.6, count:1, gap:1.2 }, { type:'air2', waves:[2], at:0.7, count:1, gap:1.5 } ], // 공중 비행선: waves = 등장 웨이브 ('all' 또는 [1,3], [] = 안 나옴) / count = 등장 수 (숫자 또는 웨이브별 [1웨이브,2웨이브,...]) / gap = 차례 진입 간격(초)
           midBossPool:[ { type:'mid', weight:40 }, { type:'mid2', weight:20 }, { type:'mid4', weight:30 }, { type:'mid3', weight:10 } ],
           bg:{ image:'space', scroll:30, hue:330, brightness:.9, saturate:1.3, tint:'rgba(255,60,60,.08)', starCount:180, starSpeed:[36, 102], starTwinkle:.55, starColors:['255,255,255', '255,170,170', '255,210,160'] } },
       ] },
@@ -467,8 +468,8 @@ const BALANCE = {
             air:{ weapon:'vulcan', shotInterval:0.09, burst:1.0, pause:0.6, bulletSpeed:900, spread:12, fireFromY:140, turn:0.9 } },  // 머리쪽 더블 발칸: burst 초 동안 연사 → pause 초 쉼 / fireFromY: 이 높이부터 사격 / turn: 사격 중 타겟 쪽으로 머리를 트는 최대 각도(라디안)
     air2: { name:'폭격 비행선', img:'en_air2', hue:0, hp:2000, speed:55, dmg:40, attackInterval:1, size:66, reward:120, color:'#b83a3a', edge:'#ffb070', eye:'#ff6a3a',
             air:{ weapon:'missile', count:4, volleys:3, volleyGap:1.4, fireAtY:200, speed:420, splash:30, missileSize:1.2, weave:0.16, weaveSpeed:0.5 } },  // 몸통 중앙에서 유도탄 count 발 → 무기·본부 무작위 타격 / volleys: 발사 횟수 / volleyGap: 발사 간격(초) / fireAtY: 첫 발사 높이 / weave·weaveSpeed: 좌우로 방향을 트는 각도(라디안)·빠르기
-    bomb: { name:'폭탄 센티넬', img:'en_bomb', hue:0, hp:630, speed:24, dmg:20, attackInterval:1.6, size:58, reward:60, bonus:800, color:'#7a7f88', edge:'#ff3a3a', eye:'#ff3a3a', boss:1, special:'bomb', blastRadius:204, blastDmg:0,   // 처치 시 폭발: blastRadius 안 미니언 파괴 + 중간보스·보스에 blastDmg 피해 (0 = 그 스테이지 가장 강한 일반 미니언의 체력만큼 자동)
-            shooter:{ startY:170, interval:2.2, speed:420, dmg:45, splash:44, size:1.5, center:true, muzzle:0.82 } },  // center: 이미지 앞쪽 발사구(몸 반지름의 muzzle 배 위치)에서 캐논식 불덩어리 포탄 발사
+    bomb: { name:'폭탄 센티넬', img:'en_bomb', hue:0, hp:630, speed:24, dmg:20, attackInterval:1.6, size:58, reward:60, bonus:800, color:'#7a7f88', edge:'#ff3a3a', eye:'#ff3a3a', boss:1, special:'bomb', blastRadius:204, blastDmg:0, fireballs:{ count:36, speed:650, length:46, reach:1.12 },   // 처치 시 폭발: blastRadius 안 미니언 파괴 + 중간보스·보스에 blastDmg 피해 (0 = 그 스테이지 가장 강한 일반 미니언의 체력만큼 자동) / fireballs: 사방으로 퍼지는 불덩어리 수·속도·길이·도달 거리(폭발 범위 배율)
+            shooter:{ startY:170, interval:1.76, speed:630, dmg:45, splash:44, size:1.5, center:true, muzzle:0.82 } },  // center: 이미지 앞쪽 발사구(몸 반지름의 muzzle 배 위치)에서 캐논식 불덩어리 포탄 발사
     mid2: { name:'포격 함선', img:'en_midA', hue:0,     hp:1300, speed:27, dmg:18, attackInterval:1.6, size:66,  reward:90,  color:'#8a5fc0', edge:'#5ad0ff', eye:'#ff3ad0', boss:1, ship:'gunship',
             shooter:{ startY:170, interval:1.5, speed:450, dmg:63, splash:52, size:1.4, twin:true } },  // twin: 양쪽 무기에서 동시에 2발 (총 피해 2배)     // 다가오면서 계속 발사, 방어벽·무기·본부에 닿으면 발사와 함께 육탄 공격
     // 정찰 포격선 (중간보스_B): 더 빨리·자주 쏘는 대신 한 발이 약함
@@ -481,7 +482,7 @@ const BALANCE = {
             //  cannon: 탄 속도·피해·폭발 범위·크기 배율 / chargeRays: 모여드는 빛줄기 수 / imgLength: 발사체 이미지(bshot) 길이(px) / chargeSize: 발사 전 빛 모으는 이펙트 크기 배율
             ranged:{ mode:'charge', visibleTop:0, interval:3.4, chargeTime:1.1, chargeRays:14, imgLength:102, chargeSize:0.7, cannon:{ speed:860, dmg:173, splash:70, size:3.2 },
               // 보스 공격 타입 (스테이지 설정 bossAttacks 로 지정: 'blast' 범위 폭탄 직사 · 'missile' 유도탄. 단일 타겟 직사(cannon)는 없음 → 적어도 blast 로 처리)
-              blast:{ dmg:150, sideMul:0.5, ring:95 },   // 범위 직사: 맞은 무기 100%, 양옆 무기·뒤쪽 본부 sideMul 피해, 2중 원형 충격파
+              blast:{ dmg:150, sideMul:1, ring:95 },   // 범위 직사: 맞은 무기 + 양옆 무기·뒤쪽 본부 모두 sideMul 배율 피해 (1 = 100%), 2중 원형 충격파
               missile:{ interval:3.5, count:6, size:1.5, countPerDifficulty:2, dmg:24, dmgPerDifficulty:0.25, speed:340, splash:34 } } }, // 유도탄: 퍼져 나갔다가 한 목표로 모여 동시 타격. 난이도마다 수·피해 증가
   },
 
@@ -489,21 +490,21 @@ const BALANCE = {
     // ---------- 지휘본부 ----------
   // levels[0] = 기지 Lv.1, levels[1] = Lv.2 ...
   //  cost: 이 레벨로 올리는 비용 / armor: 적 공격 1회당 줄이는 피해 / maxHp: 최대 내구도
-  //  maxDrones: 보유 가능한 드론 수 (시작 6대 + Lv.1에서 3대 추가, 이후 레벨마다 +3) / buildTime: 드론 1대 생산 시간 (생산 슬롯마다 동시에 진행)
+  //  buildTime: 드론 1대 생산 시간 (생산 슬롯마다 동시에 진행) · 보유 드론 수는 hqResearch 의 droneBase·dronesPerLevel 로 정함
+  //  maxHp: 스테이지 안 기지 업그레이드 체력 (Lv.1 기준과의 차이만큼 hqResearch.base.hpByLevel 체력에 더해짐)
   //  (무기 해금은 아래 weapons 의 unlock 값으로 정합니다)
   hq: {
     upgradeTime: 3,      // 기지 업그레이드 버튼을 누른 뒤 완료까지 걸리는 시간(초)
     // 기지 수리: 기본 time 초 + 기지 레벨 1당 timePerLevel 초 (비용도 레벨당 costPerLevel 만큼 증가). 게이지가 차오르는 동안 체력이 조금씩 회복 (도중에 받은 피해는 그대로 남음)
     repair: { time: 8, timePerLevel: 1, minRatio: 0.1, hpPerMineral: 2, costPerLevel: 0.25, costFixed: false }, // minRatio: 무기와 같은 방식으로 남은 체력만큼 시간 단축 / costFixed: false = 부서진 양만큼만 수리비
     drawSize: 136,       // 커맨드센터(본부) 이미지 크기
-    turret: 'vulcan',    // 본부에 달린 무기 (선택 불가, 기지 레벨에 따라 자동 업그레이드). 기지 종류별로 바꿀 수 있음
-    // turretLevel: 그 기지 레벨에서의 본부 무기 레벨
+    // turretLevel: 그 기지 레벨에서의 본부 무기(메인무기) 레벨
     levels: [
-      { cost: 0,    armor: 2,  maxHp: 750, maxDrones: 9, buildTime: 8.0, turretLevel: 1 },   // 기본 체력 +20% 추가 (레벨별)
-      { cost: 400,  armor: 4.5, maxHp: 900, maxDrones: 12, buildTime: 6.4, turretLevel: 2 },
-      { cost: 900,  armor: 9,  maxHp: 1200, maxDrones: 15, buildTime: 5.0, turretLevel: 3 },
-      { cost: 1600, armor: 13.5, maxHp: 1400, maxDrones: 18, buildTime: 4.0, turretLevel: 4 },
-      { cost: 2500, armor: 18, maxHp: 1700, maxDrones: 21, buildTime: 3.2, turretLevel: 5 },
+      { cost: 0,    armor: 2,  maxHp: 750, buildTime: 8.0, turretLevel: 1 },   // 기본 체력 +20% 추가 (레벨별)
+      { cost: 400,  armor: 4.5, maxHp: 900, buildTime: 6.4, turretLevel: 2 },
+      { cost: 900,  armor: 9,  maxHp: 1200, buildTime: 5.0, turretLevel: 3 },
+      { cost: 1600, armor: 13.5, maxHp: 1400, buildTime: 4.0, turretLevel: 4 },
+      { cost: 2500, armor: 18, maxHp: 1700, buildTime: 3.2, turretLevel: 5 },
     ],
   },
 
@@ -528,9 +529,8 @@ const BALANCE = {
     armor: 0,                // 방어력 (적 공격 1회당 피해 감소)
     extraWallCost: 300,      // 업그레이드 비용: 같은 방어벽을 안쪽에 하나 더 추가 (1회만 가능)
     extraWallGap: 11,        // 바깥 방어벽과 추가 방어벽 사이 간격
-    extraWallHqLevel: 2,
     extraWallResearch: 3,  // 방어벽 추가(2중 방어벽)에 필요한 정비창 지휘본부 연구 레벨
-    buildTime: 4,            // 방어벽 추가 버튼을 누른 뒤 건설에 걸리는 시간(초)     // 방어벽 추가에 필요한 기지 레벨 (3 = 기지를 2번 업그레이드한 뒤)
+    buildTime: 4,            // 방어벽 추가 버튼을 누른 뒤 건설에 걸리는 시간(초)
     hpPerMineral: 4,         // 광석 1당 수리되는 내구도 (수리 비용 = 부서진 양 ÷ 이 값)
     repairSteps: 5,          // 내구도 게이지 표시 칸 수
     repairTime: 20,          // 전체 수리 시간(초). 수리하면 항상 내구도를 끝까지 채움
@@ -572,8 +572,9 @@ const BALANCE = {
   hqResearch: {
     // 지휘본부 연구 (기지 강화 레벨): 연구할 때마다 기지 기본 공격력·방어력이 오름 (정비창 능력치 = 스테이지 시작 능력치)
     //  스테이지 안에서는 이 능력치를 바탕으로 광석으로 추가 업그레이드. 레벨이 오를수록 방어력·드론 수·드론 채굴 속도가 오름
-    // cost: 연구 비용 (× 현재 레벨) / defPer: 레벨당 방어력 증가 / dronePer: 레벨당 드론 생산 시간 감소 비율 (0.05 = 5% 빨라짐) / droneMin: 생산 시간 최소 비율
-    base: { maxLevel: 9, cost: 2000, defPer: 1, dronePer: 0.25, droneMin: 0.35 }, // maxLevel: 본부기지 최대 레벨 (9) / 레벨당: 방어력 +defPer, 드론 +dronesPerLevel대, 채굴 속도 +25% (Lv9 = +200%) / 업그레이드 비용 = cost × 현재 레벨, 스테이지 1개 클리어당 1레벨
+    // cost: 연구 비용 (× 현재 레벨) / defPer: 레벨당 방어력 증가 / dronePer: 레벨당 드론 채굴 속도 증가 비율 (0.25 = +25%)
+    base: { maxLevel: 9, cost: 2000, defPer: 1, dronePer: 0.25,
+            hpByLevel: [750, 750, 750, 750, 750, 750, 750, 750, 750] }, // hpByLevel: 본부기지 Lv.1~9 의 스테이지 시작 기지 체력 (스테이지 안 기지 업그레이드는 hq.levels 의 체력 차이만큼 추가) // maxLevel: 본부기지 최대 레벨 (9) / 레벨당: 방어력 +defPer, 드론 +dronesPerLevel대, 채굴 속도 +25% (Lv9 = +200%) / 업그레이드 비용 = cost × 현재 레벨, 스테이지 1개 클리어당 1레벨
     droneBase: 10,       // 스테이지에서 보유할 수 있는 기본 드론 수
     dronesPerLevel: 2,   // 지휘본부 연구 레벨이 1 오를 때마다 추가되는 드론 수
     levelPerClear: 1,  // 서로 다른 스테이지를 1개 클리어할 때마다 연구할 수 있는 레벨 수 (가능 레벨 = 1 + 클리어한 스테이지 수 × 이 값)
@@ -671,7 +672,7 @@ const BALANCE = {
 
   // ---------- 스테이지 진행 / 재도전 난이도 / 별 ----------
   stages: {
-    finalStage: 30,     // 최종 스테이지 번호 (정비창 스테이지 카드 수). BALANCE.galaxies 의 스테이지 개수 합계로 자동 계산됨
+    finalStage: 50,     // 최종 스테이지 번호 (정비창 스테이지 카드 수). BALANCE.galaxies 의 스테이지 개수 합계로 자동 계산됨
     maxClears: 3,       // 스테이지마다 기록하는 최대 클리어 횟수 = 난이도 재도전 단계 수 (카드에 0/3, 2/3 … 표시). 늘리면 단계가 늘어남
     stageMaxClears: {}, // 특정 스테이지만 횟수를 다르게: 예) { 5: 4, 10: 5 } → 5스테이지 4회, 10스테이지 5회
     // 클리어 횟수별 난이도·보상 단계 (첫 줄 = 처음 도전, 둘째 줄 = 1번 클리어한 뒤 재도전 …)
@@ -744,7 +745,7 @@ const CONFIG = {
   //  기지 주변 지형은 기존 지형 텍스처(field), 그 바깥(적이 오는 공간)은 우주 이미지(BG_Space) + 천천히 흐르는 별
   background: {
     // 기지 바탕 이미지 (basebg, 원본 941px 기준): 왼쪽·오른쪽 기둥의 돌출부 위치에 방어벽 빔이 연결됨
-    baseImg: { nub1Y: 58.5, nub2Y: 123, nub1X: 81, nub2X: 90, srcW: 941 }, // 돌출부 중심 높이 / 돌출부 끝 x
+    baseImg: { nub1Y: 58.5, nub1X: 81, nub2X: 90, srcW: 941 }, // nub1Y: 첫 돌출부 중심 높이 / nub1X·nub2X: 돌출부 끝 x / srcW: 원본 이미지 너비
     terrainTop: 500,        // 지형이 시작되는 높이 (위쪽 = 우주 공간). 방어벽(530)보다 조금 위
     edgeJag: 9,             // 지형 경계선의 울퉁불퉁한 정도 (0 = 직선)
     edgeStep: 14,           // 경계선 굴곡 간격 (px)
@@ -843,6 +844,7 @@ const CONFIG = {
   oreImage: { w: 118 },    // 광석 이미지 가로 크기 (px)
   hqTopImage: { length: 78 },
   hqMissileImage: { length: 63, slotX: 0.36, slotY: -0.34 }, // slotX·slotY: 좌·우 발사슬롯 위치 (이미지 너비·길이 비율, -Y = 앞쪽 · +Y = 뒤쪽)
+  vibration: { duration: 120, gap: 1.0 }, // 기지 피격 진동: duration = 진동 길이(ms) / gap = 이 시간(초) 이상 피해가 없다가 다시 맞을 때만 진동
   turretShadow: { alpha: 0.6, blur: 7, x: 5, y: 9 }, // 스테이지 기지 위 무기 그림자: 진하기 / 블러 / 가로·세로 거리(px) // 스테이지 본부에 배치된 유도미사일 무기(탑뷰) 이미지 길이 (px) // 스테이지 본부 기본 무기(탑뷰) 이미지 길이 (px)
   oreTextFont: 16,       // 드론이 광석을 내려놓을 때 기지 위에 뜨는 +광석 숫자 크기
   showEnemyNames: false, // true = 중간보스·보스 위에 이름 표시
@@ -924,7 +926,7 @@ const CONFIG = {
     shopGrantGems: true,     // true = 잼 구매 버튼을 누르면 바로 지급 (결제 연동 전) / false = '결제 준비 중' 안내
   },
   // ---------- 프로필 / 훈장 (누적 처치 수가 kills 이상이면 획득) ----------
-  profile: { defaultName:'PILOT', maxNameLength:10 },
+  profile: { defaultName:'PILOT' }, // 처음 사용자 이름
   // 훈장: 은하의 모든 스테이지를 (난이도 상관없이) 한 번씩 클리어할 때마다 하나씩 획득. galaxy: 은하 번호(0부터), -1 = 처음부터 보유
   medals: [
     { name:'훈련생',     galaxy:-1, icon:'chevron1', color:'#9fb4d8' },
@@ -1691,6 +1693,8 @@ const Music={on:false,timer:null,step:0,next:0,bus:null,noise:null,verb:null,kin
 // ===== 상태 =====
 let S,eid=0;
 const hqLv=()=>HQL[S.hqLvl-1];
+const hqBaseHp=()=>{const a=HR.base.hpByLevel;return a&&a.length?(a[Math.min(hqRL(),a.length)-1]??HQL[0].maxHp):HQL[0].maxHp}; // 정비창 본부기지 레벨별 기지 체력
+const hqMaxHp=()=>hqBaseHp()+(hqLv().maxHp-HQL[0].maxHp); // 스테이지 기지 최대 체력 = 본부기지 레벨 체력 + 스테이지 안 업그레이드 추가분
 // 방어벽: [0] 바깥 방어벽, [1] 업그레이드로 추가되는 안쪽 방어벽
 const WALL2_Y=WALL_Y+WALL_H+WL.extraWallGap;
 const makeWalls=()=>[{wall:true,y:WALL_Y,hp:WL.baseHp,on:true,hit:0},{wall:true,y:WALL2_Y,hp:WL.baseHp,on:false,hit:0}];
@@ -1698,7 +1702,7 @@ const aliveWall=w=>w.on&&w.hp>0;
 function blockWall(e){for(const w of S.walls)if(aliveWall(w)&&e.y<w.y)return w;return null} // 적을 막고 있는 방어벽
 function newRun(){
   S={stage:1,minerals:G.startMinerals,status:'menu',speed:1,paused:false,hqLvl:1,
-    hq:{hp:HQL[0].maxHp},walls:makeWalls(),chunks:[],
+    hq:{hp:hqBaseHp()},walls:makeWalls(),chunks:[],
     decks:DECK_POS.map(p=>({...p,w:null,lvl:0,hp:0,hit:0,broken:false,build:null,cd:Math.random()*.3,ang:-Math.PI/2})),
     dslots:Array.from({length:DR.slots},()=>({on:false,t:0})),sup:CONFIG.support.map(c=>{const d=c&&!CONFIG.skillRules.startCharged?(c.startDelay||0):0;return{cd:d,cdMax:d||1}}),hqUp:null,hqRep:null,wallRep:null,repairCD:0,drones:[],enemies:[],projs:[],fx:[],texts:[],
     kills:0,wallHit:0,hqHit:0,strikes:[],icew:[],booms:[],parts:[],t:0,spawnAcc:0,hordeLeft:0,wave:1,waveT:0,phase:'wave',gapT:0,hordeDone:false,midDone:false,bossDone:false,bonusDone:{},banner:null};
@@ -1746,8 +1750,8 @@ const wRepCost=d=>{if(!d.w||wRepAmt(d)<=0.5)return 0;const mh=wHp(d.w,d.lvl),ful
 const wRepTime=d=>{const m=wHp(d.w,d.lvl);const mr=WG.repairMinRatio;return (WG.repairTime+WG.repairTimePerLevel*(d.lvl-1))*Math.max(mr,clamp((m-d.hp)/m,0,1))}; // 무기 수리 시간
 const HRP=()=>CONFIG.hq.repair;
 const hqRepLv=()=>Math.max(S.hqLvl,hqRL()); // 수리 시간·비용에 쓰는 기지 레벨
-const hqRepCost=()=>{const r=HRP(),m=hqLv().maxHp-S.hq.hp;return m>0.5?Math.ceil((r.costFixed?hqLv().maxHp:m)/r.hpPerMineral*(1+r.costPerLevel*(hqRepLv()-1))):0}; // 기지 수리 비용
-const hqRepTime=()=>{const r=HRP(),mx=hqLv().maxHp;return (r.time+r.timePerLevel*(hqRepLv()-1))*Math.max(r.minRatio,clamp((mx-S.hq.hp)/mx,0,1))}; // 기지 수리 시간
+const hqRepCost=()=>{const r=HRP(),m=hqMaxHp()-S.hq.hp;return m>0.5?Math.ceil((r.costFixed?hqMaxHp():m)/r.hpPerMineral*(1+r.costPerLevel*(hqRepLv()-1))):0}; // 기지 수리 비용
+const hqRepTime=()=>{const r=HRP(),mx=hqMaxHp();return (r.time+r.timePerLevel*(hqRepLv()-1))*Math.max(r.minRatio,clamp((mx-S.hq.hp)/mx,0,1))}; // 기지 수리 시간
 const canUpgrade=d=>d.id!=='C'&&d.w&&!d.upT&&!d.repT&&d.lvl<WD[d.w].maxLevel&&!upBlock(d)&&S.minerals>=upCost(d);
 const levelColor=l=>WU.levelColors[Math.min(l,WU.levelColors.length)-1];
 const canHQUp=()=>CONFIG.stageRules.hqUpgrade&&!S.hqUp&&!S.hqRep&&S.hqLvl<HQL.length&&S.minerals>=HQL[S.hqLvl].cost;
@@ -1755,7 +1759,7 @@ const blink=()=>.25+.75*(.5+.5*Math.sin(performance.now()/1000*8)); // 업그레
 const BLUE=a=>'rgba(61,139,255,'+a+')';
 
 function startStage(){
-  S.hq.hp=hqLv().maxHp;S.walls.forEach(w=>w.hp=WL.baseHp);
+  S.hq.hp=hqMaxHp();S.walls.forEach(w=>w.hp=WL.baseHp);
   Object.assign(S,{enemies:[],projs:[],fx:[],texts:[],chunks:[],strikes:[],icew:[],booms:[],parts:[],t:0,spawnAcc:0,hordeLeft:0,wave:1,waveT:0,phase:'wave',gapT:0,hordeDone:false,midDone:false,bossDone:false,wallRep:null,bonusW:{},bossQ:0,boss1:null,wDelay:null,bombN:0});
   S.drones.forEach((d,i)=>{d.x=d.hx;d.y=d.hy;d.st='out';d.carry=0;d.p=0;d.delay=(i%5)*.2;d.hp=d.maxHp=droneHp()});
   S.status='play';S.banner=null;S.intro={t:4.8,T:4.8};hideOverlay(); // 시작 화면: 난이도 · STAGE · 별
@@ -1850,7 +1854,8 @@ function boom(x,y,r,color){S.fx.push({k:'boom',x,y,r,color,t:.3,T:.3})}
 function hitSparks(e){ // 한 번에 파괴되지 않는 적이 맞을 때: 작은 불꽃 파티클 (적마다 간격 제한)
   if(S.parts.length>1300||(e.hfx||0)>S.t)return;e.hfx=S.t+.06;const n=e.boss?21:12;
   for(let i=0;i<n;i++){const a=Math.random()*6.283,sp=(80+Math.random()*200)*1.5,fa=e.ang??Math.PI/2;S.parts.push({x:e.x+Math.cos(fa)*e.r*.6+(Math.random()-.5)*e.r*.4,y:e.y+Math.sin(fa)*e.r*.6+(Math.random()-.5)*e.r*.3,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,l:.18+Math.random()*.22,t:0,s:1.5+Math.random()*2,dr:3,add:true,c:['#ffffff','#fff3b0','#ffd84d','#ff9a3c'][Math.random()*4|0]})}}
-function bombBlast(e){const R2=EN.bomb.blastRadius||204;S.fx.push({k:'disc',x:e.x,y:e.y,max:R2,t:.55,T:.55},{k:'boom',x:e.x,y:e.y,r:R2,color:'#ffb070',t:.5,T:.5},{k:'flash2',c:'255,200,140',t:.18,T:.18});
+function bombBlast(e){const R2=EN.bomb.blastRadius||204,FB=EN.bomb.fireballs||{};for(let i=0;i<(FB.count??36);i++){const a=i/(FB.count??36)*6.283+(Math.random()-.5)*.3,sp=(FB.speed??650)*(.8+Math.random()*.4),T=R2*((FB.reach??1.12)+Math.random()*.08)/sp; // 불덩어리: 사방으로 퍼져 폭발 범위를 조금 넘는 곳에서 사라짐
+    S.fx.push({k:'bfire',x:e.x,y:e.y,a,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,len:(FB.length??46)*(.75+Math.random()*.5),t:T,T})}S.fx.push({k:'disc',x:e.x,y:e.y,max:R2,t:.55,T:.55},{k:'boom',x:e.x,y:e.y,r:R2,color:'#ffb070',t:.5,T:.5},{k:'flash2',c:'255,200,140',t:.18,T:.18});
   for(let k=0;k<6;k++){const a=k/6*6.283;spawnBoom(e.x+Math.cos(a)*R2*.55,e.y+Math.sin(a)*R2*.55,e.r*1.4,.05+k*.04)}S.shake=Math.max(S.shake||0,12);Sound.play(SND.bomb,SND.bombVolume,0);S.banner={txt:'폭탄 폭발!',t:1.4,color:'#ffb070'};
   const SC=stageCfg(S.stage),T=S.tier||STC.clearTiers[0],bd=EN.bomb.blastDmg>0?EN.bomb.blastDmg:Math.max(...Object.values(EN).filter(b=>!b.boss&&!b.air&&!b.special).map(b=>b.hp))*(1+G.enemyHpPerStage*(S.stage-1))*(SC.hpMul??1)*T.enemyHp; // 폭발 피해 = 이 스테이지 일반 미니언 최대 체력
   for(const o of S.enemies)if(o!==e&&o.hp>0&&!o.air&&Math.hypot(o.x-e.x,o.y-e.y)<=R2+o.cr)damage(o,o.boss?bd:Math.max(bd,o.hp+1))} // 미니언은 파괴, 중간보스·보스는 같은 피해만 받음 (비행선 제외)
@@ -1930,6 +1935,9 @@ function slotFx(x,y,a){S.fx.push({k:'mflash',x,y,a,s:.45,t:.14,T:.14},{k:'ldisc'
   for(let i=0;i<3;i++){const an=Math.random()*6.283;S.parts.push({x,y,vx:Math.cos(an)*30,vy:Math.sin(an)*30,l:.45+Math.random()*.3,t:0,s:4+Math.random()*3,dr:1.5,c:'rgba(150,150,150,.45)'})}}
 function launchFx(x,y,r,c){c=c||'255,170,90';S.fx.push({k:'ldisc',x,y,r,c,t:.3,T:.3},{k:'pring',x,y,r:r*1.1,t:.3,T:.3,w:4}); // 유도탄 발사 효과: 순간 원반형 빛 + 사방 파티클
   for(let i=0;i<22;i++){const an=Math.random()*6.283,sp=100+Math.random()*260;S.parts.push({x,y,vx:Math.cos(an)*sp,vy:Math.sin(an)*sp*.8,l:.2+Math.random()*.3,t:0,s:1.5+Math.random()*2.5,dr:3,add:true,c:['#ffffff','#ffe6b0','#ffb36a','#ff8040'][Math.random()*4|0]})}}
+let vibLast=-1e9;
+function vibrate(force){const V=CONFIG.vibration||{},now=performance.now(),quiet=now-vibLast>=(V.gap??1)*1000;vibLast=now; // 진동: 피해가 gap 초 이상 끊겼다가 다시 맞을 때만 (연속 피격 중에는 첫 피해만)
+  if(META.vibOff||!(force||quiet))return;try{navigator.vibrate&&navigator.vibrate(V.duration??120)}catch(_){}}
 function enemyBolt(e){const SH=e.shooter;let tx,ty;const w=S.walls.find(x=>aliveWall(x));
   if(w){tx=e.x+(Math.random()-.5)*60;ty=w.y}else if(e.boss===2&&hqExposed()){tx=HQ.x;ty=HQ.y} // 보스: 무기 데크가 부서져 기지가 노출되면 기지를 우선 공격
   else{const c=[{x:HQ.x,y:HQ.y}];for(const d of S.decks)if(deckLive(d))c.push(d);const t=c.reduce((a,b)=>dist(e,b)<dist(e,a)?b:a);tx=t.x;ty=t.y}
@@ -1938,7 +1946,7 @@ function enemyBolt(e){const SH=e.shooter;let tx,ty;const w=S.walls.find(x=>alive
       ttx=w?tx+(px-e.x):tx,a2=Math.atan2(ty-py,ttx-px);
       S.projs.push({k:'ebolt',x:px,y:py,vx:Math.cos(a2)*SH.speed,vy:Math.sin(a2)*SH.speed,tx:ttx,ty,dmg:SH.dmg*((S.tier&&S.tier.damage)||1),r:SH.splash,t:0,sz});
       S.fx.push({k:'boom',x:px,y:py,r:8+6*sz,color:'#ff6ad5',t:.15,T:.15})}return}
-  if(SH.center){const mo=SH.muzzle??.82;sx=e.x+Math.cos(fa)*e.r*mo;sy=e.y+Math.sin(fa)*e.r*mo;const a=Math.atan2(ty-sy,tx-sx);S.projs.push({k:'ebolt',x:sx,y:sy,vx:Math.cos(a)*SH.speed,vy:Math.sin(a)*SH.speed,tx,ty,dmg:SH.dmg*((S.tier&&S.tier.damage)||1),r:SH.splash,t:0,sz,fc:1,bshot:1});S.fx.push({k:'blast',x:sx,y:sy,r:18*sz,c:'255,190,110',t:.22,T:.22});muzzleFx(sx,sy,a,sz);return} // 앞쪽 발사구에서 불덩어리 포탄
+  if(SH.center){const mo=SH.muzzle??.82,a=Math.atan2(ty-e.y,tx-e.x);e.ang=e.want=a;sx=e.x+Math.cos(a)*e.r*mo;sy=e.y+Math.sin(a)*e.r*mo;S.projs.push({k:'ebolt',x:sx,y:sy,vx:Math.cos(a)*SH.speed,vy:Math.sin(a)*SH.speed,tx,ty,dmg:SH.dmg*((S.tier&&S.tier.damage)||1),r:SH.splash,t:0,sz,fc:1,bshot:1});S.fx.push({k:'blast',x:sx,y:sy,r:18*sz,c:'255,190,110',t:.22,T:.22});muzzleFx(sx,sy,a,sz);return} // 앞쪽 발사구에서 불덩어리 포탄 // 발사 순간 몸이 타겟 방향을 향함
   if(fc){sx=e.x+Math.cos(fa)*e.r*.95;sy=e.y+Math.sin(fa)*e.r*.95}else{const a0=Math.atan2(ty-e.y,tx-e.x);sx=e.x+Math.cos(a0)*e.r*.7;sy=e.y+Math.sin(a0)*e.r*.7}
   const a=Math.atan2(ty-sy,tx-sx);
   S.projs.push({k:'ebolt',x:sx,y:sy,vx:Math.cos(a)*SH.speed,vy:Math.sin(a)*SH.speed,tx,ty,dmg:SH.dmg*((S.tier&&S.tier.damage)||1),r:SH.splash,t:0,sz,fc});
@@ -2001,7 +2009,7 @@ function update(dt){
     if(!S.midDone&&S.wave===midWaveOf(S.stage)&&wp>=G.midBossAtWave){S.midDone=true;spawn(pickMidBoss())}
     {const nb=Math.max(1,G.bombCount??1)>0?Math.max(1,G.bombCount??1)+Math.max(0,(S.run||1)-1)*(G.bombPerDifficulty??1):0;S.bombN=S.bombN||0;if(S.bombN<nb&&EN.bomb&&!(last&&S.bossDone)&&(S.bombN===0?(S.wave===1&&wp>=(G.bombFirstAt??.35)):prog>=S.bombN/nb*.9+.05)){S.bombN++;S.bombW=S.wave;spawn('bomb')}
       if(EN.bomb&&S.bombW!==S.wave&&S.status!=='clearing'&&wp>=(last?.05:(G.bombFirstAt??.35))){S.bombW=S.wave;spawn('bomb')}}
-    {const AR=G.airRaids||[];S.airDone=S.airDone||{};for(let i=0;i<AR.length;i++){const A=AR[i],k=i+'|'+S.wave;if(S.airDone[k]||!EN[A.type]||S.stage<(A.fromStage||1)||(A.waves!=='all'&&!(A.waves||[]).includes(S.wave))||wp<Math.max(G.airMinAt??.5,A.at??.5)||S.status==='clearing')continue;S.airDone[k]=1;for(let n=0;n<(A.count||1);n++)spawnAir(A.type,n,A.gap)}} // 공중 비행선 습격 // 폭탄 센티넬: 모든 웨이브에 최소 1대 (웨이브 진행률 bombFirstAt 지점) + 난이도별 추가분은 스테이지 진행에 나눠 등장
+    {const AR=G.airRaids||[];S.airDone=S.airDone||{};for(let i=0;i<AR.length;i++){const A=AR[i],k=i+'|'+S.wave;if(S.airDone[k]||!EN[A.type]||S.stage<(A.fromStage||1)||(A.waves!=='all'&&!(A.waves||[]).includes(S.wave))||wp<Math.max(G.airMinAt??.5,A.at??.5)||S.status==='clearing')continue;S.airDone[k]=1;const cn=Array.isArray(A.count)?(A.count[S.wave-1]??A.count[A.count.length-1]??0):(A.count??1);for(let n=0;n<cn;n++)spawnAir(A.type,n,A.gap)}} // count: 숫자 = 모든 웨이브 같은 수 / [1,2,3] = 웨이브별 수 // 공중 비행선 습격 // 폭탄 센티넬: 모든 웨이브에 최소 1대 (웨이브 진행률 bombFirstAt 지점) + 난이도별 추가분은 스테이지 진행에 나눠 등장
     {const nb=Math.max(0,(G.bonusPerWave??1)+Math.max(0,(S.run||1)-1)*(G.bonusPerDifficulty??1)),bk='w'+S.wave;S.bonusW=S.bonusW||{};const got=S.bonusW[bk]||0; // 웨이브마다 보너스 적 (난이도가 오를수록 더 많이)
       if(got<nb&&EN[G.bonusType||'mid3']&&!(last&&S.bossDone)){const at=(G.bonusFrom??.2)+((G.bonusTo??.8)-(G.bonusFrom??.2))*(nb>1?got/(nb-1):.5);if(wp>=at||last&&S.waveT>=G.bossDelay*(got+1)/(nb+1)){S.bonusW[bk]=got+1;spawn(G.bonusType||'mid3')}}}
     if(last&&!S.bossDone&&S.waveT>=G.bossDelay){S.bossDone=true;const nb=Math.max(1,(G.bossCount|0||1)+Math.max(0,(S.run||1)-1)*(G.bossPerDifficulty??1)),now=Math.min(nb,G.bossTogether||2); // 보스 수 = 스테이지 기본 + 난이도 추가
@@ -2042,7 +2050,7 @@ function update(dt){
     if(d.repT.t>=d.repT.T){d.repT=null;d.hit=.1;addText(d.x,d.y-DECK_SIZE/2-4,'수리 완료',C.ok,13)}}
   if(S.wallRep){const R3=S.wallRep,rm=Math.max(1e-6,R3.T-R3.t),st=Math.min(dt,rm),h=R3.left*st/rm;R3.left-=h;R3.t+=dt;if(aliveWall(R3.w))R3.w.hp=Math.min(WL.baseHp,R3.w.hp+h);else{S.wallRep=null;S.repairCD=0} // 방어벽 수리 (받은 피해만큼 남은 수리량 감소)
     if(R3.t>=R3.T){S.wallRep=null;R3.w.hit=.1;addText(W/2,R3.w.y-14,'방어벽 수리 완료',C.ok,13)}}
-  if(S.hqRep){const R2=S.hqRep,rm=Math.max(1e-6,R2.T-R2.t),st=Math.min(dt,rm),h=R2.left*st/rm;R2.left-=h;R2.t+=dt;S.hq.hp=Math.min(hqLv().maxHp,S.hq.hp+h); // 기지 수리 (받은 피해만큼 남은 수리량 감소)
+  if(S.hqRep){const R2=S.hqRep,rm=Math.max(1e-6,R2.T-R2.t),st=Math.min(dt,rm),h=R2.left*st/rm;R2.left-=h;R2.t+=dt;S.hq.hp=Math.min(hqMaxHp(),S.hq.hp+h); // 기지 수리 (받은 피해만큼 남은 수리량 감소)
     if(R2.t>=R2.T){S.hqRep=null;addText(HQ.x,HQ.y-70,'기지 수리 완료',C.ok,14)}}
   for(const d of S.decks)if(d.upT){ // 무기 업그레이드 진행
     if(d.w!==d.upT.key){d.upT=null;continue}
@@ -2180,11 +2188,12 @@ function update(dt){
       if(tg.contact){attack(e,tg.obj,dt);moveTo(e,tg.x,tg.y,v*.25*dt)}
       else moveTo(e,tg.x,tg.y,v*dt);
     }
+    if(e.special==='bomb'&&e.shooter&&e.y>=e.shooter.startY-40){const w=S.walls.find(x=>aliveWall(x));let tx=e.x,ty=w?w.y:HQ.y;if(!w){const c=[{x:HQ.x,y:HQ.y}];for(const d of S.decks)if(deckLive(d))c.push(d);const t=c.reduce((a,b)=>dist(e,b)<dist(e,a)?b:a);tx=t.x;ty=t.y}e.want=Math.atan2(ty-e.y,tx-e.x)} // 폭탄 센티넬: 공격 대상 쪽으로 몸을 돌림
   }
   for(const e of S.enemies)if(!(e.frozenT>0)){let da=e.want-e.ang;while(da>Math.PI)da-=2*Math.PI;while(da<-Math.PI)da+=2*Math.PI;const tr=(e.boss?2.5:7)*dt;e.ang+=clamp(da,-tr,tr)} // 머리 방향을 부드럽게 회전
   S.enemies=S.enemies.filter(e=>e.hp>0);
   separate();
-  for(const f of S.fx){f.t-=dt;if(f.k==='fball'){f.x+=f.vx*dt;f.y+=f.vy*dt}if(f.k==='shard'){f.x+=f.vx*dt;f.y+=f.vy*dt;f.vx*=.985;f.vy*=.985}if(f.k==='spark'){f.x+=f.vx*dt;f.y+=f.vy*dt;f.vx*=.96;f.vy=f.vy*.96+60*dt}}S.fx=S.fx.filter(f=>f.t>0);
+  for(const f of S.fx){f.t-=dt;if(f.k==='fball'||f.k==='bfire'){f.x+=f.vx*dt;f.y+=f.vy*dt}if(f.k==='shard'){f.x+=f.vx*dt;f.y+=f.vy*dt;f.vx*=.985;f.vy*=.985}if(f.k==='spark'){f.x+=f.vx*dt;f.y+=f.vy*dt;f.vx*=.96;f.vy=f.vy*.96+60*dt}}S.fx=S.fx.filter(f=>f.t>0);
   for(const t of S.texts){t.t-=dt;t.y-=20*dt}S.texts=S.texts.filter(t=>t.t>0);
 }
 function fire(d,b,st,tgt){
@@ -2265,7 +2274,7 @@ function hurt(target,d){
     return;
   }
   {
-    const hd=Math.max(1,d-hqLv().armor-((S.baseMul&&S.baseMul.armor)||0));S.hq.hp=Math.max(0,S.hq.hp-hd);S.hqHit=.1;if(S.hqRep)S.hqRep.left=Math.max(0,S.hqRep.left-hd);
+    const hd=Math.max(1,d-hqLv().armor-((S.baseMul&&S.baseMul.armor)||0));S.hq.hp=Math.max(0,S.hq.hp-hd);vibrate();S.hqHit=.1;if(S.hqRep)S.hqRep.left=Math.max(0,S.hqRep.left-hd); // vibrate: 기지 피격 진동
     if(S.hq.hp===0&&S.status==='play'){Sound.play(SND.explosion,1,0);explode(HQ.x,HQ.y,HQ.r*2*EX.allySize,true);for(let k=1;k<=6;k++)spawnBoom(HQ.x+(Math.random()-.5)*HQ.r*2,HQ.y+(Math.random()-.5)*HQ.r*1.6,HQ.r*1.6,k*.1);stageFail()}
   }
 }
@@ -2789,7 +2798,7 @@ function drawHQOre(){const sz=CONFIG.hq.drawSize,gy=HQ.y+sz/2-24; // 본부 아�
     const ix=bx+11,iy=by+10;ctx.fillStyle='#3fe0f5';ctx.beginPath();ctx.moveTo(ix,iy-7);ctx.lineTo(ix+5.5,iy);ctx.lineTo(ix,iy+7);ctx.lineTo(ix-5.5,iy);ctx.closePath();ctx.fill();ctx.fillStyle='rgba(255,255,255,.6)';ctx.beginPath();ctx.moveTo(ix,iy-7);ctx.lineTo(ix+5.5,iy);ctx.lineTo(ix,iy);ctx.closePath();ctx.fill();
     ctx.fillStyle='#9ff6ff';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(t,bx+21,iy+1);ctx.textBaseline='alphabetic'}}
 function drawHQ(){
-  const r=HQ.r,ratio=S.hq.hp/hqLv().maxHp,sz=CONFIG.hq.drawSize,k=devK();
+  const r=HQ.r,ratio=S.hq.hp/hqMaxHp(),sz=CONFIG.hq.drawSize,k=devK();
   if(IMG.hq){ // 커맨드센터 이미지
     ctx.save();ctx.shadowColor='rgba(0,0,0,.5)';ctx.shadowBlur=8*k;ctx.shadowOffsetX=4*k;ctx.shadowOffsetY=5*k;ctx.drawImage(IMG.hq,HQ.x-sz/2,HQ.y-sz/2,sz,sz);ctx.restore();
     if(S.hqHit>0){ctx.globalAlpha=S.hqHit/.1*.6;ctx.drawImage(FLASH.hq,HQ.x-sz/2,HQ.y-sz/2,sz,sz);ctx.globalAlpha=1} // 피격 시 밝게 번쩍
@@ -3025,6 +3034,10 @@ function drawFx(f){
     ctx.lineWidth=Math.max(3,r*.07);ctx.strokeStyle='rgba(110,210,255,'+(.75*al)+')';ctx.beginPath();ctx.arc(f.x,f.y,r,0,7);ctx.stroke();
     ctx.lineWidth=Math.max(2,r*.025);ctx.strokeStyle='rgba(255,255,255,'+(.95*al)+')';ctx.beginPath();ctx.arc(f.x,f.y,r*.985,0,7);ctx.stroke();
     ctx.lineWidth=2;ctx.strokeStyle='rgba(60,140,255,'+(.5*al)+')';ctx.beginPath();ctx.arc(f.x,f.y,r*.8,0,7);ctx.stroke();ctx.restore()}}
+  else if(f.k==='bfire'){const al=Math.pow(Math.max(0,a),.6),L=f.len*(.6+.4*a),tx=f.x-Math.cos(f.a)*L,ty=f.y-Math.sin(f.a)*L; // 폭탄 불덩어리: 꼬리 + 빛나는 머리, 범위 끝으로 갈수록 작아지며 사라짐
+    ctx.save();ctx.globalCompositeOperation='lighter';const lg=ctx.createLinearGradient(tx,ty,f.x,f.y);lg.addColorStop(0,'rgba(255,80,20,0)');lg.addColorStop(.6,`rgba(255,140,40,${(.55*al).toFixed(2)})`);lg.addColorStop(1,`rgba(255,230,160,${al.toFixed(2)})`);
+    ctx.strokeStyle=lg;ctx.lineCap='round';ctx.lineWidth=3+9*al;ctx.beginPath();ctx.moveTo(tx,ty);ctx.lineTo(f.x,f.y);ctx.stroke();
+    const r=6+10*al,rg=ctx.createRadialGradient(f.x,f.y,0,f.x,f.y,r);rg.addColorStop(0,`rgba(255,255,220,${al.toFixed(2)})`);rg.addColorStop(.45,`rgba(255,170,60,${(.8*al).toFixed(2)})`);rg.addColorStop(1,'rgba(255,60,10,0)');ctx.fillStyle=rg;ctx.beginPath();ctx.arc(f.x,f.y,r,0,7);ctx.fill();ctx.restore()}
   else if(f.k==='fball'){const im=IMG.beam||IMG.fireshot;if(im){ // 플라즈마 전기 빔 (Beam 이미지, 빛 더하기): 위로 갈수록 투명 → 화면 상단부에서 사라짐
     const fy=CONFIG.support.find(c=>c&&c.type==='plasma').beamFadeY??[360,140],fade=clamp((f.y-fy[1])/(fy[0]-fy[1]),0,1),al=Math.sqrt(Math.max(0,a))*fade;if(al<=.01)return;
     ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=al;ctx.translate(f.x,f.y);ctx.rotate(f.a+Math.PI/2);const L=f.len*1.4,w=L*.55;ctx.drawImage(im,-w/2,-L*.15,w,L);ctx.restore()}}
@@ -3178,7 +3191,7 @@ function renderSheet(){
     const arm=c.armor+Math.round((S.baseMul&&S.baseMul.armor)||0),hrc=hqRepCost();
     h+=sec(CONFIG.stageRules.hqUpgrade?'기지 업그레이드':'지휘본부',`<div class="wmain">
       <div class="bigicon hq"><img src="${ICONS.hq}" alt="지휘본부"></div>
-      <div class="wstat">${hpBar(S.hq.hp/c.maxHp)}<div class="stl">내구 <span data-bind="hptxt">${Math.ceil(S.hq.hp)}/${c.maxHp}</span> · 방어력 ${arm}</div><div class="stl">${tw.name} Lv.${mwEq().lv} · 공격력 ${fmt(ta.dmg)}</div>
+      <div class="wstat">${hpBar(S.hq.hp/hqMaxHp())}<div class="stl">내구 <span data-bind="hptxt">${Math.ceil(S.hq.hp)}/${hqMaxHp()}</span> · 방어력 ${arm}</div><div class="stl">${tw.name} Lv.${mwEq().lv} · 공격력 ${fmt(ta.dmg)}</div>
       ${S.hqUp?'<div class="gauge"><i data-bind="hqgauge"></i></div>':''}</div>
       <div class="bcol2"><button class="gbtn rep" data-act="hqrep" ${hrc&&!S.hqRep&&!S.hqUp?`data-cost="${hrc}"`:'disabled'}>${S.hqRep?'수리 중':btnL('수리',hrc||null)}</button>
       ${CONFIG.stageRules.hqUpgrade?`<button class="gbtn up" data-act="hqup" ${max||S.hqUp||S.hqRep?'disabled':`data-cost="${n.cost}"`}>${max?'MAX':S.hqUp?'진행 중':btnL('업그레이드',n.cost)}</button>`:''}</div></div>`);
@@ -3228,7 +3241,7 @@ function refreshSheet(){
   if(cur.k==='deck'&&sigDeck(cur.d)!==deckSig)return renderSheet();
   if(cur.k==='wall'&&sigWall()!==wallSig)return renderSheet(); // 방어벽 게이지·수리비 실시간
   { // 체력·수리 비용 실시간 갱신
-    const isD=cur.k==='deck',d=cur.d,hp=isD?d.hp:S.hq.hp,mh=isD?(d.w?wHp(d.w,d.lvl):1):hqLv().maxHp,rc=isD?wRepCost(d):hqRepCost();
+    const isD=cur.k==='deck',d=cur.d,hp=isD?d.hp:S.hq.hp,mh=isD?(d.w?wHp(d.w,d.lvl):1):hqMaxHp(),rc=isD?wRepCost(d):hqRepCost();
     const hb=sheet.querySelector('.hpbar.big i');if(hb&&(isD?d.w:cur.k==='hq')){const r=clamp(hp/mh,0,1);hb.style.width=r*100+'%';hb.style.background=r>.5?'':r>.25?'linear-gradient(#ffe066,#e0a92a)':'linear-gradient(#ff7a6a,#d63a32)'}
     const ht=sheet.querySelector('[data-bind="hptxt"]');if(ht)ht.textContent=Math.ceil(hp)+'/'+Math.round(mh);
     const rb=sheet.querySelector('[data-act="rep"],[data-act="hqrep"]'),rcEl=sheet.querySelector('[data-bind="repcost"]');if(rcEl&&rc){rcEl.textContent=rc;if(rb&&rb.dataset.cost)rb.dataset.cost=rc}
@@ -3248,7 +3261,7 @@ sheet.addEventListener('click',ev=>{
   const a=b.dataset.act;sfx(a==='equip'?'equip':'click'); // 장착 = 메카닉 장착음, 업그레이드·수리(게이지) = 클릭음
   if(a==='close')return closeSheet();
   if(a==='rep'){const d=cur.d,c=wRepCost(d);if(d.w&&c&&!d.repT&&!d.upT&&S.minerals>=c){S.minerals-=c;dailyAdd('repairs');d.repT={t:0,key:d.w,T:wRepTime(d),left:wRepAmt(d)}}} // 게이지가 차는 동안 조금씩 회복
-  else if(a==='hqrep'){const c=hqRepCost();if(c&&!S.hqRep&&!S.hqUp&&S.minerals>=c){S.minerals-=c;dailyAdd('repairs');S.hqRep={t:0,T:hqRepTime(),left:hqLv().maxHp-S.hq.hp}}}
+  else if(a==='hqrep'){const c=hqRepCost();if(c&&!S.hqRep&&!S.hqUp&&S.minerals>=c){S.minerals-=c;dailyAdd('repairs');S.hqRep={t:0,T:hqRepTime(),left:hqMaxHp()-S.hq.hp}}}
   else if(a==='up'){const d=cur.d;if(canUpgrade(d)){S.minerals-=upCost(d);d.upT={t:0,key:d.w}}} // 게이지가 다 차면 레벨 업
   else if(a==='equip'){const k=b.dataset.key,c=WD[k].cost,d=cur.d;if(d.build)return toast('무기를 설치하고 있습니다');
     if(S.minerals>=c&&WD[k].unlock<=gateLv()&&!WD[k].mainOnly){S.minerals-=c;if(d.w)equip(d,k);else{d.build={key:k,t:0};d.broken=false}}} // 빈(파괴된) 슬롯은 설치 시간이 걸림
@@ -3435,7 +3448,7 @@ function hangarInfo(){ // 게이지에 없는 중요 능력 (간단히)
 function itemSlotsHTML(){const it=skItems();return Array.from({length:HR.itemSlots||4},(_,k)=>{const c=CONFIG.support.find(x=>x&&x.type===it[k]);
   return c?`<i class="on" title="${c.name}"><img src="${ICONS[c.icon]}" alt="${c.name}"></i>`:'<i></i>'}).join('')}
 function statDisp(){ // 정비창 능력치 표시 수치 (현재 / 최대)
-  const w=hqW(),lv=mwEq().lv,st=hqStatMul(wStat(w.base,1),w,lv),bs=bStatsR(META.active),hp=HQL[0].maxHp;
+  const w=hqW(),lv=mwEq().lv,st=hqStatMul(wStat(w.base,1),w,lv),bs=bStatsR(META.active),hp=hqBaseHp();
   let aM=0,rM=0;for(const x of MWL){const m=hqStatMul(wStat(x.base,1),x,x.maxLevel);aM=Math.max(aM,m.dmg);rM=Math.max(rM,m.rate)}
   const dM=(bStats(META.active).def+(HR.base.maxLevel-1)*HR.base.defPer)*100+hp;
   return{atk:Math.round(st.dmg*10),atkMax:Math.round(aM*10/.95),def:Math.round(bs.def*100+hp),defMax:Math.round(dM/.95),rate:Math.round(st.rate*60),rateMax:Math.round(rM*60/.95)}}
@@ -3758,6 +3771,7 @@ function renderWin(){
     h+=`<div class="hwin dayw setw">${head('설정').replace('class="wh"','class="wh ctr"')}<div class="setl">
       <div class="srow"><span class="sl">🎵 배경음</span>${sw(!META.bgmOff,'set:bgm')}</div>
       <div class="srow"><span class="sl">🔊 효과음</span>${sw(!META.sfxOff,'set:sfx')}</div>
+      <div class="srow"><span class="sl">📳 진동</span>${sw(!META.vibOff,'set:vib')}</div>
       <div class="srow"><span class="sl">🌐 언어</span><select class="ssel" onchange="window.__setLang&&window.__setLang(this)"><option value="ko" selected>한국어</option><option value="en">English</option></select></div>
       <div class="snote">영어 버전은 준비 중입니다 · English coming soon</div></div></div>`;
   }else if(hWin==='missions'){const D=dailyData(),M=BALANCE.dailyMissions,all=M.list.every((m,k)=>D.claimed[k]);
@@ -3888,7 +3902,7 @@ hangarEl.addEventListener('click',ev=>{
     case 'mgdel':if(mgAnim)return;mg.mats.splice(+arg,1);return renderWin();
     case 'mgdo':return mergeDo();
     case 'shop':case 'medals':case 'attend':case 'missions':case 'settings':return openWin(k);
-    case 'set':{if(arg==='bgm'){META.bgmOff=!META.bgmOff;Sound.bgmOff=META.bgmOff;if(META.bgmOff)Music.stop();else{Sound.init();hangarMusic()}}else if(arg==='sfx'){META.sfxOff=!META.sfxOff;Sound.sfxOff=META.sfxOff;if(!META.sfxOff)sfx('click')}saveAll();return renderWin()} // 설정: 배경음·효과음 켜기/끄기
+    case 'set':{if(arg==='bgm'){META.bgmOff=!META.bgmOff;Sound.bgmOff=META.bgmOff;if(META.bgmOff)Music.stop();else{Sound.init();hangarMusic()}}else if(arg==='sfx'){META.sfxOff=!META.sfxOff;Sound.sfxOff=META.sfxOff;if(!META.sfxOff)sfx('click')}else if(arg==='vib'){META.vibOff=!META.vibOff;if(!META.vibOff)vibrate(true)}saveAll();return renderWin()} // 설정: 배경음·효과음 켜기/끄기
     case 'attendget':{if(!attendReady())return;const A=attendData(),t=todayKey();if(!A.last||dayDiff(A.last,t)!==1)A.streak=0;const L2=BALANCE.attendance,r=L2[A.streak%L2.length];A.streak++;A.last=t;const msg=giveReward(r);saveAll();sfx('upgrade');refreshTop();return hMsg('출석 보상!\n'+msg)}
     case 'mclaim':{const D=dailyData(),M=BALANCE.dailyMissions;if(arg==='all'){if(D.allGot||!M.list.every((m,k)=>D.claimed[k]))return;D.allGot=true;const msg=giveReward(M.allClearReward);saveAll();sfx('upgrade');refreshTop();return hMsg('모든 미션 완료!\n'+msg)}
       const m=M.list[+arg];if(!m||D.claimed[+arg]||(D.prog[m.key]||0)<m.goal)return;D.claimed[+arg]=true;const msg=giveReward(m.reward);saveAll();sfx('upgrade');refreshTop();return hMsg(m.name+' 완료!\n'+msg)}
